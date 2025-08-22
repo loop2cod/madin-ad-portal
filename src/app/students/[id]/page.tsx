@@ -37,7 +37,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { StudentFeeManagement } from '@/components/StudentFeeManagement';
 
 interface StudentLoginData {
-  _id: string;
+  id: string;
   name: string;
   email: string;
   mobile: string;
@@ -502,7 +502,7 @@ export default function StudentDetailPage() {
               </div>
               <h1 className="text-2xl font-semibold text-gray-900">Student Details</h1>
               <p className="text-gray-600 text-sm">
-                Student ID: {studentLogin._id} | Application ID: {applicationData.applicationId}
+                Student ID: {studentLogin.id} | Application ID: {applicationData.applicationId}
               </p>
               {studentLogin.admissionNumber && (
                 <p className="text-green-700 text-sm font-medium">
@@ -1073,7 +1073,7 @@ export default function StudentDetailPage() {
 
               {/* Fee Structure Management */}
               {(() => {
-                console.log('Rendering Fee Management:', { studentLogin: !!studentLogin, studentId: studentLogin?._id, feeAssignment: !!studentData.feeAssignment });
+                console.log('Rendering Fee Management:', { studentLogin: !!studentLogin, studentId: studentLogin?.id, feeAssignment: !!studentData.feeAssignment });
                 return (
                   <StudentFeeManagement
                     studentId={studentLogin?.id || 'undefined'}
