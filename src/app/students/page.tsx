@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -89,6 +90,7 @@ interface StudentLoginsResponse {
 }
 
 export default function StudentLoginsPage() {
+  const router = useRouter();
   const { user: currentUser, hasPermission } = useAuth();
   const [students, setStudents] = useState<StudentLogin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -486,17 +488,27 @@ export default function StudentLoginsPage() {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedStudent(student);
-                                setResetDialogOpen(true);
-                              }}
-                            >
-                              <RotateCcw className="w-3 h-3 mr-1" />
-                              Reset Password
-                            </Button>
+                            <div className="flex items-center gap-2 justify-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => router.push(`/students/${student._id}`)}
+                              >
+                                <Eye className="w-3 h-3 mr-1" />
+                                View Details
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedStudent(student);
+                                  setResetDialogOpen(true);
+                                }}
+                              >
+                                <RotateCcw className="w-3 h-3 mr-1" />
+                                Reset Password
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
