@@ -13,7 +13,8 @@ import {
   LogOut,
   User,
   MessageCircle,
-  GraduationCap
+  GraduationCap,
+  DollarSign
 } from "lucide-react"
 import {
   Sidebar,
@@ -78,6 +79,12 @@ const getNavigationItems = (user: any) => {
         permission: "view_analytics"
       },
       {
+        title: "Fee Structures",
+        url: "/fee-structures",
+        icon: DollarSign,
+        permission: "manage_settings"
+      },
+      {
         title: "System Settings",
         url: "/settings",
         icon: Settings,
@@ -124,6 +131,12 @@ const getNavigationItems = (user: any) => {
         url: "/analytics",
         icon: BarChart3,
         permission: "view_analytics"
+      },
+      {
+        title: "Fee Structures",
+        url: "/fee-structures",
+        icon: DollarSign,
+        permission: "manage_settings"
       },
       {
         title: "Add Staff",
