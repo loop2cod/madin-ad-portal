@@ -119,4 +119,28 @@ export async function patch<T>(url: string, data?: any, config: AxiosRequestConf
   }
 }
 
+// Download function for files with authentication
+export async function downloadFile(url: string, filename: string): Promise<void> {
+  try {
+    const response = await axiosApi.get(url, {
+      responseType: 'blob',
+    });
+    
+    const blob = new Blob([response.data], { type: response.headers['content-type'] });
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(downloadUrl);
+    document.body.removeChild(a);
+  } catch (error) {
+    if (!axios.isAxiosError(error) || !error.response || error.response.status !== 401) {
+      console.error("Download Error:", error);
+    }
+    throw error;
+  }
+}
+
 export default axiosApi;

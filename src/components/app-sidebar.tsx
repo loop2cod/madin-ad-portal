@@ -14,7 +14,8 @@ import {
   User,
   MessageCircle,
   GraduationCap,
-  DollarSign
+  DollarSign,
+  Award
 } from "lucide-react"
 import {
   Sidebar,
@@ -58,6 +59,12 @@ const getNavigationItems = (user: any) => {
         title: "All Applications",
         url: "/applications",
         icon: FileText,
+        permission: "view_all_applications"
+      },
+      {
+        title: "Certificates",
+        url: "/certificates",
+        icon: Award,
         permission: "view_all_applications"
       },
       {
@@ -115,6 +122,12 @@ const getNavigationItems = (user: any) => {
         permission: "view_all_applications"
       },
       {
+        title: "Certificates",
+        url: "/certificates",
+        icon: Award,
+        permission: "view_all_applications"
+      },
+      {
         title: "Quick Admission",
         url: "/quick-admission",
         icon: UserPlus,
@@ -154,6 +167,12 @@ const getNavigationItems = (user: any) => {
         title: "My Applications",
         url: "/applications/department",
         icon: FileText,
+        permission: "view_department_applications"
+      },
+      {
+        title: "Certificates",
+        url: "/certificates",
+        icon: Award,
         permission: "view_department_applications"
       },
       {
