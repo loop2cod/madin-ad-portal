@@ -21,11 +21,14 @@ import {
   Filter,
   Calendar,
   Users,
-  Award
+  Award,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { get, put, post, downloadFile } from '@/utilities/AxiosInterceptor';
 import { toast } from '@/components/ui/use-toast';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface CertificateRequest {
   id: string;
@@ -54,6 +57,20 @@ interface CertificateRequest {
   serialNumber?: string;
 }
 
+interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalRequests: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+interface CertificateResponse {
+  success: boolean;
+  data: CertificateRequest[];
+  pagination: PaginationInfo;
+}
+
 const statusConfig = {
   pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pending' },
   approved: { color: 'bg-blue-100 text-blue-800', icon: CheckCircle, label: 'Approved' },
@@ -74,7 +91,6 @@ const certificateTypeLabels = {
 
 export default function AdminCertificatesPage() {
   const [requests, setRequests] = useState<CertificateRequest[]>([]);
-  const [filteredRequests, setFilteredRequests] = useState<CertificateRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -88,20 +104,62 @@ export default function AdminCertificatesPage() {
     rejectionReason: '',
     remarks: ''
   });
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    totalPages: 0,
+    totalRequests: 0,
+    hasNext: false,
+    hasPrev: false
+  });
+  
+  // Debounced search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   useEffect(() => {
     fetchCertificateRequests();
-  }, []);
+  }, [debouncedSearchTerm, statusFilter, typeFilter, departmentFilter, currentPage]);
 
   useEffect(() => {
-    filterRequests();
-  }, [requests, searchTerm, statusFilter, typeFilter, departmentFilter]);
+    // Reset to first page when filters change
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [debouncedSearchTerm, statusFilter, typeFilter, departmentFilter]);
 
   const fetchCertificateRequests = async () => {
     try {
-      const response = await get<{ success: boolean; data: CertificateRequest[] }>('/api/v1/certificates/all');
+      setLoading(true);
+      
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: pageSize.toString(),
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      });
+      
+      // Add filters if they're not 'all'
+      if (debouncedSearchTerm.trim()) {
+        params.append('search', debouncedSearchTerm.trim());
+      }
+      if (statusFilter !== 'all') {
+        params.append('status', statusFilter);
+      }
+      if (typeFilter !== 'all') {
+        params.append('certificateType', typeFilter);
+      }
+      if (departmentFilter !== 'all') {
+        params.append('department', departmentFilter);
+      }
+      
+      const response = await get<CertificateResponse>(`/api/v1/certificates/all?${params}`);
       if (response.success) {
         setRequests(response.data);
+        setPagination(response.pagination);
       }
     } catch (error) {
       console.error('Failed to fetch certificate requests:', error);
@@ -115,31 +173,6 @@ export default function AdminCertificatesPage() {
     }
   };
 
-  const filterRequests = () => {
-    let filtered = [...requests];
-
-    if (searchTerm) {
-      filtered = filtered.filter(request =>
-        request.studentId.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.studentId.admissionNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.studentId.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(request => request.status === statusFilter);
-    }
-
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(request => request.certificateType === typeFilter);
-    }
-
-    if (departmentFilter !== 'all') {
-      filtered = filtered.filter(request => request.studentId.department === departmentFilter);
-    }
-
-    setFilteredRequests(filtered);
-  };
 
   const handleStatusUpdate = async () => {
     if (!selectedRequest) return;
@@ -225,7 +258,7 @@ export default function AdminCertificatesPage() {
   };
 
   const stats = {
-    total: requests.length,
+    total: pagination.totalRequests,
     pending: requests.filter(r => r.status === 'pending').length,
     approved: requests.filter(r => r.status === 'approved').length,
     generated: requests.filter(r => r.status === 'generated').length,
@@ -377,7 +410,7 @@ export default function AdminCertificatesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRequests.map((request) => {
+                {requests.map((request) => {
                   const statusInfo = statusConfig[request.status as keyof typeof statusConfig];
                   const StatusIcon = statusInfo.icon;
                   
@@ -472,6 +505,69 @@ export default function AdminCertificatesPage() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Pagination Controls */}
+        {pagination.totalPages > 1 && (
+          <Card>
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, pagination.totalRequests)} of {pagination.totalRequests} entries
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={!pagination.hasPrev || loading}
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" />
+                    Previous
+                  </Button>
+                  
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (pagination.totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= pagination.totalPages - 2) {
+                        pageNum = pagination.totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={pageNum === currentPage ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          disabled={loading}
+                          className="w-8 h-8 p-0"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                    disabled={!pagination.hasNext || loading}
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Status Update Dialog */}
         <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>

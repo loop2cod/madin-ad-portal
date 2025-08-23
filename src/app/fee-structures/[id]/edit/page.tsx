@@ -46,7 +46,6 @@ const mockFeeStructure: FeeStructure = {
           examPermitRegFee: 2025,
           specialFee: 2500,
           tuitionFee: 17500,
-          feeFundCharges: 0,
           others: 0
         },
         governmentQuota: {
@@ -54,7 +53,6 @@ const mockFeeStructure: FeeStructure = {
           examPermitRegFee: 2025,
           specialFee: 2500,
           tuitionFee: 10000,
-          feeFundCharges: 0,
           others: 0
         }
       },
@@ -181,7 +179,6 @@ export default function EditFeeStructurePage() {
       examPermitRegFee: 0,
       specialFee: 0,
       tuitionFee: 0,
-      feeFundCharges: 0,
       others: 0
     };
 
@@ -434,14 +431,6 @@ export default function EditFeeStructurePage() {
                         type="number"
                         value={semester.fees?.tuitionFee || 0}
                         onChange={(e) => updateSemesterFee(semesterIndex, 'tuitionFee', Number(e.target.value))}
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm">Fee/Fund Charges</Label>
-                      <Input
-                        type="number"
-                        value={semester.fees?.feeFundCharges || 0}
-                        onChange={(e) => updateSemesterFee(semesterIndex, 'feeFundCharges', Number(e.target.value))}
                       />
                     </div>
                     <div>

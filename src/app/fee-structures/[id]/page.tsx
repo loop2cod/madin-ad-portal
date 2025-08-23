@@ -34,7 +34,6 @@ const mockFeeStructure: FeeStructure = {
           examPermitRegFee: 2025,
           specialFee: 2500,
           tuitionFee: 17500,
-          feeFundCharges: 0,
           others: 0
         },
         governmentQuota: {
@@ -42,7 +41,6 @@ const mockFeeStructure: FeeStructure = {
           examPermitRegFee: 2025,
           specialFee: 2500,
           tuitionFee: 10000,
-          feeFundCharges: 0,
           others: 0
         }
       },
@@ -57,7 +55,6 @@ const mockFeeStructure: FeeStructure = {
           examPermitRegFee: 0,
           specialFee: 0,
           tuitionFee: 20000,
-          feeFundCharges: 0,
           others: 0
         },
         governmentQuota: {
@@ -65,7 +62,6 @@ const mockFeeStructure: FeeStructure = {
           examPermitRegFee: 0,
           specialFee: 0,
           tuitionFee: 12500,
-          feeFundCharges: 0,
           others: 0
         }
       },
@@ -163,7 +159,6 @@ export default function ViewFeeStructurePage() {
       semester.fees.examPermitRegFee,
       semester.fees.specialFee,
       semester.fees.tuitionFee,
-      semester.fees.feeFundCharges || 0,
       semester.fees.others,
       calculateComponentTotal(semester.fees)
     ]);
@@ -290,7 +285,6 @@ export default function ViewFeeStructurePage() {
                   <TableHead className="text-center">Exam/Permit Reg Fee</TableHead>
                   <TableHead className="text-center">Special Fee</TableHead>
                   <TableHead className="text-center">Tuition Fee</TableHead>
-                  <TableHead className="text-center">Fee/Fund Charges</TableHead>
                   <TableHead className="text-center">Others</TableHead>
                   <TableHead className="text-center font-bold">Total</TableHead>
                 </TableRow>
@@ -312,9 +306,6 @@ export default function ViewFeeStructurePage() {
                     </TableCell>
                     <TableCell className="font-mono text-center">
                       {semester.fees.tuitionFee.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="font-mono text-center">
-                      {(semester.fees.feeFundCharges || 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="font-mono text-center">
                       {semester.fees.others.toLocaleString()}

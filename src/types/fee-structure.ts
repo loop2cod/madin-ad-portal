@@ -5,7 +5,6 @@ export interface FeeComponent {
   examPermitRegFee: number;
   specialFee: number;
   tuitionFee: number;
-  feeFundCharges?: number;
   others: number;
 }
 
@@ -81,8 +80,7 @@ export const validateFeeComponent = (component: FeeComponent): boolean => {
          component.examPermitRegFee >= 0 &&
          component.specialFee >= 0 &&
          component.tuitionFee >= 0 &&
-         component.others >= 0 &&
-         (component.feeFundCharges === undefined || component.feeFundCharges >= 0);
+         component.others >= 0;
 };
 
 export const calculateComponentTotal = (component: FeeComponent): number => {
@@ -90,7 +88,6 @@ export const calculateComponentTotal = (component: FeeComponent): number => {
          component.examPermitRegFee + 
          component.specialFee + 
          component.tuitionFee + 
-         (component.feeFundCharges || 0) +
          component.others;
 };
 

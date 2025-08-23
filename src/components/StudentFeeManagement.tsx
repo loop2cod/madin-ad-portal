@@ -50,7 +50,6 @@ interface FeeStructure {
       examPermitRegFee: number;
       specialFee: number;
       tuitionFee: number;
-      feeFundCharges: number;
       others: number;
     };
     total: number;
@@ -82,7 +81,6 @@ interface FeeAssignment {
       examPermitRegFee?: number;
       specialFee?: number;
       tuitionFee?: number;
-      feeFundCharges?: number;
       others?: number;
     };
     reason?: string;
@@ -279,7 +277,6 @@ export const StudentFeeManagement: React.FC<StudentFeeManagementProps> = ({
       examPermitRegFee: 'Exam Permit/Reg Fee',
       specialFee: 'Special Fee',
       tuitionFee: 'Tuition Fee',
-      feeFundCharges: 'Fee Fund Charges',
       others: 'Others'
     };
     return labels[feeType] || feeType;
@@ -307,7 +304,6 @@ export const StudentFeeManagement: React.FC<StudentFeeManagementProps> = ({
            effectiveFees.examPermitRegFee + 
            effectiveFees.specialFee + 
            effectiveFees.tuitionFee + 
-           (effectiveFees.feeFundCharges || 0) +
            effectiveFees.others;
   };
 

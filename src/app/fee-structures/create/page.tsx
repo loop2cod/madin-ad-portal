@@ -32,7 +32,6 @@ const defaultFeeComponent: FeeComponent = {
   examPermitRegFee: 0,
   specialFee: 0,
   tuitionFee: 0,
-  feeFundCharges: 0,
   others: 0
 };
 
@@ -308,14 +307,6 @@ export default function CreateFeeStructurePage() {
                       type="number"
                       value={semester.fees.tuitionFee}
                       onChange={(e) => updateSemesterFee(semesterIndex, 'tuitionFee', Number(e.target.value))}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm">Fee/Fund Charges</Label>
-                    <Input
-                      type="number"
-                      value={semester.fees.feeFundCharges || 0}
-                      onChange={(e) => updateSemesterFee(semesterIndex, 'feeFundCharges', Number(e.target.value))}
                     />
                   </div>
                   <div>
