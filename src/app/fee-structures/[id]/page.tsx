@@ -15,71 +15,12 @@ import { feeStructureService } from "@/services/feeStructureService";
 import { useToast } from "@/components/ui/use-toast";
 import Link from "next/link";
 
-// Mock data - replace with actual API call
-const mockFeeStructure: FeeStructure = {
-  id: "1",
-  type: "regular",
-  academicYear: "2025",
-  title: "Regular Batch - 2025 Admission",
-  description: "Standard fee structure for regular admission batch starting in 2025",
-  effectiveDate: new Date("2024-10-12"),
-  isActive: true,
-  semesters: [
-    {
-      semester: 1,
-      semesterName: "Semester 1 (At the time of admission)",
-      fees: {
-        managementQuota: {
-          admissionFee: 5000,
-          examPermitRegFee: 2025,
-          specialFee: 2500,
-          tuitionFee: 17500,
-          others: 0
-        },
-        governmentQuota: {
-          admissionFee: 0,
-          examPermitRegFee: 2025,
-          specialFee: 2500,
-          tuitionFee: 10000,
-          others: 0
-        }
-      },
-      total: { managementQuota: 27025, governmentQuota: 14525 }
-    },
-    {
-      semester: 2,
-      semesterName: "Semester 2",
-      fees: {
-        managementQuota: {
-          admissionFee: 0,
-          examPermitRegFee: 0,
-          specialFee: 0,
-          tuitionFee: 20000,
-          others: 0
-        },
-        governmentQuota: {
-          admissionFee: 0,
-          examPermitRegFee: 0,
-          specialFee: 0,
-          tuitionFee: 12500,
-          others: 0
-        }
-      },
-      total: { managementQuota: 20000, governmentQuota: 12500 }
-    }
-  ],
-  grandTotal: { managementQuota: 127025, governmentQuota: 77025 },
-  hostelFee: 6000,
-  createdAt: new Date("2024-10-10"),
-  updatedAt: new Date("2024-10-12"),
-  createdBy: "admin"
-};
 
 export default function ViewFeeStructurePage() {
   const params = useParams();
   const { hasPermission } = useAuth();
   const { toast } = useToast();
-  const [feeStructure, setFeeStructure] = useState<FeeStructure | null>(null);
+  const [feeStructure, setFeeStructure] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const canManageFeeStructures = hasPermission('manage_settings');
@@ -153,7 +94,7 @@ export default function ViewFeeStructurePage() {
       'Total'
     ];
 
-    const rows = feeStructure.semesters.map(semester => [
+    const rows = feeStructure.semesters.map((semester:any) => [
       semester.semesterName,
       semester.fees.admissionFee,
       semester.fees.examPermitRegFee,
@@ -290,7 +231,7 @@ export default function ViewFeeStructurePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {feeStructure.semesters.map((semester, index) => (
+                {feeStructure.semesters.map((semester:any, index:any) => (
                   <TableRow key={index}>
                     <TableCell className="font-medium">
                       {semester.semesterName}

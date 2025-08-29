@@ -189,7 +189,7 @@ export default function CreateFeeStructurePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(FEE_STRUCTURE_TYPES).map(([key, label]) => (
+                    {Object.entries(FEE_STRUCTURE_TYPES).map(([key, label]:any) => (
                       <SelectItem key={key} value={key}>{label}</SelectItem>
                     ))}
                   </SelectContent>
@@ -234,7 +234,7 @@ export default function CreateFeeStructurePage() {
                 <Label>Effective Date</Label>
                 <DatePicker
                   date={formData.effectiveDate}
-                  setDate={(date) => date && setFormData(prev => ({ ...prev, effectiveDate: date }))}
+                  setDate={(date:any) => date && setFormData(prev => ({ ...prev, effectiveDate: date }))}
                 />
               </div>
 

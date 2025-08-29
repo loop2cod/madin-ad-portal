@@ -56,7 +56,7 @@ export interface UpdateFeeStructureData extends Partial<CreateFeeStructureData> 
   isActive?: boolean;
 }
 
-export const FEE_STRUCTURE_TYPES: Record<FeeStructureType, string> = {
+export const FEE_STRUCTURE_TYPES:any = {
   regular: 'Regular Batch',
   lateral_entry: 'Lateral Entry (LET)', 
   evening: 'Evening Batch',

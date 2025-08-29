@@ -211,7 +211,7 @@ interface FeeAssignment {
         examPermitRegFee: number;
         specialFee: number;
         tuitionFee: number;
-        feeFundCharges: number;
+        feeFundCharges?: number;
         others: number;
       };
       total: number;

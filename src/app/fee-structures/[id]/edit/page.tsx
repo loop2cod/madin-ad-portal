@@ -27,44 +27,6 @@ import { feeStructureService } from "@/services/feeStructureService";
 import { useToast } from "@/components/ui/use-toast";
 import Link from "next/link";
 
-// Mock data - replace with actual API call
-const mockFeeStructure: FeeStructure = {
-  id: "1",
-  type: "regular",
-  academicYear: "2025",
-  title: "Regular Batch - 2025 Admission",
-  description: "Standard fee structure for regular admission",
-  effectiveDate: new Date("2024-10-12"),
-  isActive: true,
-  semesters: [
-    {
-      semester: 1,
-      semesterName: "Semester 1",
-      fees: {
-        managementQuota: {
-          admissionFee: 5000,
-          examPermitRegFee: 2025,
-          specialFee: 2500,
-          tuitionFee: 17500,
-          others: 0
-        },
-        governmentQuota: {
-          admissionFee: 0,
-          examPermitRegFee: 2025,
-          specialFee: 2500,
-          tuitionFee: 10000,
-          others: 0
-        }
-      },
-      total: { managementQuota: 27025, governmentQuota: 14525 }
-    }
-  ],
-  grandTotal: { managementQuota: 127025, governmentQuota: 77025 },
-  hostelFee: 6000,
-  createdAt: new Date("2024-10-10"),
-  updatedAt: new Date("2024-10-12"),
-  createdBy: "admin"
-};
 
 export default function EditFeeStructurePage() {
   const router = useRouter();
@@ -72,7 +34,7 @@ export default function EditFeeStructurePage() {
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [feeStructure, setFeeStructure] = useState<FeeStructure | null>(null);
+  const [feeStructure, setFeeStructure] = useState<any | null>(null);
 
   const [formData, setFormData] = useState<UpdateFeeStructureData>({
     id: '',
@@ -182,7 +144,7 @@ export default function EditFeeStructurePage() {
       others: 0
     };
 
-    setFormData(prev => ({
+    setFormData((prev:any) => ({
       ...prev,
       semesters: [
         ...(prev.semesters || []),
@@ -298,7 +260,7 @@ export default function EditFeeStructurePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(FEE_STRUCTURE_TYPES).map(([key, label]) => (
+                    {Object.entries(FEE_STRUCTURE_TYPES).map(([key, label]:any) => (
                       <SelectItem key={key} value={key}>{label}</SelectItem>
                     ))}
                   </SelectContent>
@@ -343,7 +305,7 @@ export default function EditFeeStructurePage() {
                 <Label>Effective Date</Label>
                 <DatePicker
                   date={formData.effectiveDate}
-                  setDate={(date) => date && setFormData(prev => ({ ...prev, effectiveDate: date }))}
+                  setDate={(date:any) => date && setFormData(prev => ({ ...prev, effectiveDate: date }))}
                 />
               </div>
 
