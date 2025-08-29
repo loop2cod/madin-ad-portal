@@ -110,8 +110,25 @@ export const StudentFeeManagement: React.FC<StudentFeeManagementProps> = ({
   feeAssignment,
   onFeeAssignmentUpdate
 }) => {
+  // All hooks must be declared at the top before any early returns
   const [availableFeeStructures, setAvailableFeeStructures] = useState<FeeStructure[]>([]);
   const [loading, setLoading] = useState(false);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedFeeStructure, setSelectedFeeStructure] = useState<string>('');
+  const [assignmentNotes, setAssignmentNotes] = useState('');
+  const [editingSemester, setEditingSemester] = useState<number | null>(null);
+  const [editingFees, setEditingFees] = useState<{[key: string]: number}>({});
+  const [editReason, setEditReason] = useState('');
+  const [expandedSemesters, setExpandedSemesters] = useState<{ [key: number]: boolean }>({});
+  const { toast } = useToast();
+
+  // useEffect hook must be declared before any conditional returns
+  useEffect(() => {
+    if (studentId && studentId !== 'undefined') {
+      fetchAvailableFeeStructures();
+    }
+  }, [studentId]);
 
   // Debug logging
   console.log('StudentFeeManagement render:', { studentId, feeAssignment: !!feeAssignment });
@@ -130,26 +147,13 @@ export const StudentFeeManagement: React.FC<StudentFeeManagementProps> = ({
         <CardContent>
           <div className="text-center py-8 text-gray-500">
             <CreditCard className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-            <p>Invalid student ID: "{studentId}". Cannot load fee management.</p>
+            <p>Invalid student ID: &quot;{studentId}&quot;. Cannot load fee management.</p>
             <p className="text-xs mt-2">Debug: Check if student data is loaded properly</p>
           </div>
         </CardContent>
       </Card>
     );
   }
-  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedFeeStructure, setSelectedFeeStructure] = useState<string>('');
-  const [assignmentNotes, setAssignmentNotes] = useState('');
-  const [editingSemester, setEditingSemester] = useState<number | null>(null);
-  const [editingFees, setEditingFees] = useState<{[key: string]: number}>({});
-  const [editReason, setEditReason] = useState('');
-  const [expandedSemesters, setExpandedSemesters] = useState<{ [key: number]: boolean }>({});
-  const { toast } = useToast();
-
-  useEffect(() => {
-    fetchAvailableFeeStructures();
-  }, []);
 
   const fetchAvailableFeeStructures = async () => {
     try {
@@ -498,7 +502,7 @@ export const StudentFeeManagement: React.FC<StudentFeeManagementProps> = ({
           <div className="text-center py-8 text-gray-500">
             <CreditCard className="w-12 h-12 mx-auto mb-2 text-gray-300" />
             <p>No fee structure assigned</p>
-            <p className="text-sm mt-2">Click "Assign Fee Structure" to assign a fee structure to this student</p>
+            <p className="text-sm mt-2">Click &quot;Assign Fee Structure&quot; to assign a fee structure to this student</p>
           </div>
         )}
 
@@ -519,7 +523,7 @@ export const StudentFeeManagement: React.FC<StudentFeeManagementProps> = ({
                 <Label className="text-sm font-medium">Fee Structure</Label>
                 {/* Debug info - remove in production */}
                 <div className="text-xs text-gray-500 mb-1 p-2 bg-gray-100 rounded">
-                  <div>Student ID: "{studentId}" | Available: {availableFeeStructures.length} fee structures | Selected: "{selectedFeeStructure}"</div>
+                  <div>Student ID: &quot;{studentId}&quot; | Available: {availableFeeStructures.length} fee structures | Selected: &quot;{selectedFeeStructure}&quot;</div>
                 </div>
                 <Select 
                   value={selectedFeeStructure || ''} 

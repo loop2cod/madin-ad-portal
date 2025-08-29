@@ -178,7 +178,7 @@ export default function AdminCertificatesPage() {
     if (!selectedRequest) return;
 
     try {
-      const response = await put(`/api/v1/certificates/${selectedRequest.id}/status`, statusForm);
+      const response = await put(`/api/v1/certificates/${selectedRequest.id}/status`, statusForm) as any;
       if (response.success) {
         toast({
           title: "Success",
@@ -199,7 +199,7 @@ export default function AdminCertificatesPage() {
 
   const handleGenerateCertificate = async (request: CertificateRequest) => {
     try {
-      const response = await post(`/api/v1/certificates/${request.id}/generate`);
+      const response = await post(`/api/v1/certificates/${request.id}/generate`) as any;
       if (response.success) {
         toast({
           title: "Success",

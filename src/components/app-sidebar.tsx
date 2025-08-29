@@ -15,7 +15,8 @@ import {
   MessageCircle,
   GraduationCap,
   DollarSign,
-  Award
+  Award,
+  CreditCard
 } from "lucide-react"
 import {
   Sidebar,
@@ -90,6 +91,12 @@ const getNavigationItems = (user: any) => {
         url: "/fee-structures",
         icon: DollarSign,
         permission: "manage_settings"
+      },
+      {
+        title: "Payment Management",
+        url: "/payments",
+        icon: CreditCard,
+        permission: "manage_payments"
       },
       {
         title: "System Settings",
