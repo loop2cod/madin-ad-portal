@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { get, post, patch } from '@/utilities/AxiosInterceptor';
+import { get, post, patch, downloadFile } from '@/utilities/AxiosInterceptor';
 import {
   GraduationCap,
   Search,
@@ -26,7 +26,12 @@ import {
   RotateCcw,
   Eye,
   EyeOff,
-  Plus
+  Plus,
+  Upload,
+  FileSpreadsheet,
+  CheckCircle,
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import {
   Select,
@@ -63,6 +68,7 @@ interface StudentLogin {
   role: 'student';
   department: string;
   admissionNumber: string;
+  registrationNumber?: string;
   applicationId: string;
   isActive: boolean;
   isFirstLogin: boolean;
@@ -102,6 +108,7 @@ export default function StudentLoginsPage() {
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<StudentLogin | null>(null);
   
   // Create login states
@@ -112,6 +119,11 @@ export default function StudentLoginsPage() {
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  
+  // Upload states
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadResults, setUploadResults] = useState<any>(null);
   
   const { toast } = useToast();
 
@@ -300,6 +312,74 @@ export default function StudentLoginsPage() {
     setNewPassword(password);
   };
 
+  const handleDownloadSample = async () => {
+    try {
+      await downloadFile('/api/v1/admin/students/registration-sample.xlsx', 'registration_numbers_template.xlsx');
+      
+      toast({
+        title: "Success",
+        description: "Sample Excel file downloaded successfully",
+      });
+    } catch (error) {
+      console.error('Download sample error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download sample file",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "Error",
+        description: "Please select an Excel file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setUploadLoading(true);
+      
+      const formData = new FormData();
+      formData.append('excel', selectedFile);
+
+      const response = await post('/api/v1/admin/students/upload-registration-numbers', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      setUploadResults(response.data);
+      
+      toast({
+        title: "Upload Complete",
+        description: response.message,
+      });
+
+      // Refresh the student list
+      fetchStudentLogins();
+      
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload Error",
+        description: error.response?.data?.message || "Failed to upload file",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  const resetUploadForm = () => {
+    setSelectedFile(null);
+    setUploadResults(null);
+    setUploadDialogOpen(false);
+  };
+
   if (loading) {
     return (
       <ProtectedRoute requiredPermissions={['view_all_users']}>
@@ -328,6 +408,15 @@ export default function StudentLoginsPage() {
                   <Button>
                     <UserPlus className="w-4 h-4 mr-2" />
                     Create Login
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+
+              <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Registration Numbers
                   </Button>
                 </DialogTrigger>
               </Dialog>
@@ -402,6 +491,7 @@ export default function StudentLoginsPage() {
                       <TableRow>
                         <TableHead>Student Details</TableHead>
                         <TableHead>Admission Info</TableHead>
+                        <TableHead>Registration Info</TableHead>
                         <TableHead>Contact</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Login Info</TableHead>
@@ -430,6 +520,21 @@ export default function StudentLoginsPage() {
                               <div className="text-sm text-gray-600">
                                 App: {student.admissionData.applicationId || student.applicationId}
                               </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              {student.registrationNumber ? (
+                                <div className="font-medium text-green-600 flex items-center gap-1">
+                                  <CheckCircle className="w-3 h-3" />
+                                  {student.registrationNumber}
+                                </div>
+                              ) : (
+                                <div className="text-sm text-gray-500 flex items-center gap-1">
+                                  <AlertCircle className="w-3 h-3" />
+                                  Not assigned
+                                </div>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -705,6 +810,153 @@ export default function StudentLoginsPage() {
               )}
               Reset Password
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upload Registration Numbers Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Upload Registration Numbers</DialogTitle>
+            <DialogDescription>
+              Upload an Excel file containing admission numbers and their corresponding registration numbers to assign them to students.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Download Sample Section */}
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-blue-500 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="font-medium text-blue-900 mb-2">Need a template?</h4>
+                  <p className="text-sm text-blue-700 mb-3">
+                    Download our sample Excel template to see the required format for uploading registration numbers.
+                  </p>
+                  <Button
+                    onClick={handleDownloadSample}
+                    size="sm"
+                    variant="outline"
+                    className="border-blue-200 text-blue-700 hover:bg-blue-100"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 mr-2" />
+                    Download Sample Template
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* File Upload Section */}
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Select Excel File</label>
+                <div className="mt-2">
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                </div>
+                {selectedFile && (
+                  <p className="text-sm text-gray-600 mt-2">
+                    Selected: {selectedFile.name}
+                  </p>
+                )}
+              </div>
+
+              {/* Upload Results */}
+              {uploadResults && (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">Upload Results</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">{uploadResults.summary?.successful || 0}</div>
+                        <div className="text-gray-600">Successful</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-red-600">{uploadResults.summary?.errors || 0}</div>
+                        <div className="text-gray-600">Errors</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-orange-600">{uploadResults.summary?.duplicates || 0}</div>
+                        <div className="text-gray-600">Duplicates</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-gray-600">{uploadResults.summary?.notFound || 0}</div>
+                        <div className="text-gray-600">Not Found</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Detailed Results */}
+                  {(uploadResults.results?.errors?.length > 0 || 
+                    uploadResults.results?.duplicates?.length > 0 || 
+                    uploadResults.results?.notFound?.length > 0) && (
+                    <ScrollArea className="h-40 border rounded-lg p-4">
+                      <div className="space-y-2">
+                        {/* Errors */}
+                        {uploadResults.results?.errors?.map((error: any, index: number) => (
+                          <div key={`error-${index}`} className="text-sm bg-red-50 p-2 rounded flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <div className="font-medium text-red-700">Row {error.row}: {error.admissionNumber}</div>
+                              <div className="text-red-600">{error.error}</div>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {/* Duplicates */}
+                        {uploadResults.results?.duplicates?.map((duplicate: any, index: number) => (
+                          <div key={`duplicate-${index}`} className="text-sm bg-orange-50 p-2 rounded flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <div className="font-medium text-orange-700">Row {duplicate.row}: {duplicate.admissionNumber}</div>
+                              <div className="text-orange-600">{duplicate.error}</div>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {/* Not Found */}
+                        {uploadResults.results?.notFound?.map((notFound: any, index: number) => (
+                          <div key={`notfound-${index}`} className="text-sm bg-gray-50 p-2 rounded flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <div className="font-medium text-gray-700">Row {notFound.row}: {notFound.admissionNumber}</div>
+                              <div className="text-gray-600">{notFound.error}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={resetUploadForm}
+            >
+              {uploadResults ? 'Close' : 'Cancel'}
+            </Button>
+            {!uploadResults && (
+              <Button
+                onClick={handleFileUpload}
+                disabled={!selectedFile || uploadLoading}
+              >
+                {uploadLoading ? (
+                  <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                ) : (
+                  <Upload className="w-4 h-4 mr-2" />
+                )}
+                Upload and Process
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

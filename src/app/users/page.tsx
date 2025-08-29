@@ -155,6 +155,8 @@ export default function UsersPage() {
         return 'Admission Officer';
       case 'department_staff':
         return 'Department Staff';
+      case 'student':
+        return 'Student';
       default:
         return role;
     }
@@ -168,6 +170,8 @@ export default function UsersPage() {
         return <UserCheck className="w-3 h-3" />;
       case 'department_staff':
         return <Building className="w-3 h-3" />;
+      case 'student':
+        return <Users className="w-3 h-3" />;
       default:
         return <Users className="w-3 h-3" />;
     }
@@ -200,7 +204,7 @@ export default function UsersPage() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-              <p className="text-gray-600 mt-2">Manage system users and their roles</p>
+              <p className="text-gray-600 mt-2">Manage administrative users and their roles</p>
             </div>
 
             {hasPermission('create_department_staff') && (
@@ -234,7 +238,7 @@ export default function UsersPage() {
                 Users ({pagination?.total || 0})
               </CardTitle>
               <CardDescription>
-                All registered users in the system
+                Administrative users in the system (students are managed separately)
               </CardDescription>
             </CardHeader>
             <CardContent>

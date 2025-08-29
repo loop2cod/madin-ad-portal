@@ -92,6 +92,8 @@ export default function Dashboard() {
         return 'Admission Officer';
       case 'department_staff':
         return 'Department Staff';
+      case 'student':
+        return 'Student';
       default:
         return role;
     }

@@ -44,6 +44,7 @@ interface StudentLoginData {
   role: 'student';
   department: string;
   admissionNumber: string;
+  registrationNumber?: string;
   applicationId: string;
   isActive: boolean;
   isFirstLogin: boolean;
@@ -278,6 +279,7 @@ export default function StudentDetailPage() {
         const response = await get<any>(`/api/v1/admin/students/${studentId}/details`);
         
         if (response.success) {
+          console.log('Student data received:', response.data); // Debug log
           setStudentData(response.data);
         } else {
           throw new Error(response.message || 'Failed to fetch student data');
@@ -509,6 +511,11 @@ export default function StudentDetailPage() {
                   Admission Number: <span className="font-bold">{studentLogin.admissionNumber}</span>
                 </p>
               )}
+              {studentLogin.registrationNumber && (
+                <p className="text-blue-700 text-sm font-medium">
+                  Registration Number: <span className="font-bold">{studentLogin.registrationNumber}</span>
+                </p>
+              )}
             </div>
             <div className="flex items-start space-x-2">
               <Badge className={studentLogin.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
@@ -561,6 +568,27 @@ export default function StudentDetailPage() {
                       <p className="text-sm text-gray-900">{studentLogin.department}</p>
                     </div>
                     <div>
+                      <Label className="text-sm font-medium text-gray-700">Admission Number</Label>
+                      <p className="text-sm text-gray-900 flex items-center">
+                        <IdCard className="w-3 h-3 mr-1 text-green-600" />
+                        {studentLogin.admissionNumber}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Registration Number</Label>
+                      {studentLogin.registrationNumber ? (
+                        <p className="text-sm text-gray-900 flex items-center">
+                          <CheckCircle className="w-3 h-3 mr-1 text-blue-600" />
+                          {studentLogin.registrationNumber}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-500 flex items-center">
+                          <AlertCircle className="w-3 h-3 mr-1 text-gray-400" />
+                          Not assigned
+                        </p>
+                      )}
+                    </div>
+                    <div>
                       <Label className="text-sm font-medium text-gray-700">Account Created</Label>
                       <p className="text-sm text-gray-900">{formatDate(studentLogin.createdAt)}</p>
                     </div>
@@ -608,24 +636,28 @@ export default function StudentDetailPage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <Label className="text-sm font-medium text-gray-700">Application Status</Label>
-                      <Badge className={getStatusColor(applicationData.status)}>
-                        {getStatusIcon(applicationData.status)}
-                        <span className="ml-1">{applicationData.status.toUpperCase()}</span>
+                      <Badge className={getStatusColor(applicationData.status || 'pending')}>
+                        {getStatusIcon(applicationData.status || 'pending')}
+                        <span className="ml-1">{(applicationData.status || 'pending').toUpperCase()}</span>
                       </Badge>
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-gray-700">Applied Date</Label>
-                      <p className="text-sm text-gray-900">{formatDate(applicationData.createdAt)}</p>
+                      <p className="text-sm text-gray-900">
+                        {applicationData.createdAt ? formatDate(applicationData.createdAt) : 'N/A'}
+                      </p>
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-gray-700">Last Updated</Label>
-                      <p className="text-sm text-gray-900">{formatDate(applicationData.updatedAt)}</p>
+                      <p className="text-sm text-gray-900">
+                        {applicationData.updatedAt ? formatDate(applicationData.updatedAt) : 'N/A'}
+                      </p>
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-gray-700">Department</Label>
                       <p className="text-sm text-gray-900">{applicationData.department || 'Not assigned'}</p>
                     </div>
-                    {applicationData.reviewedBy && (
+                    {applicationData.reviewedBy && applicationData.reviewedBy.name && (
                       <>
                         <div>
                           <Label className="text-sm font-medium text-gray-700">Reviewed By</Label>
@@ -638,6 +670,16 @@ export default function StudentDetailPage() {
                           </p>
                         </div>
                       </>
+                    )}
+                    
+                    {/* Show review status information even if no reviewer */}
+                    {applicationData.status && applicationData.status !== 'pending' && !applicationData.reviewedBy && (
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">Review Status</Label>
+                        <p className="text-sm text-gray-600">
+                          Application has been {applicationData.status} but reviewer information is not available
+                        </p>
+                      </div>
                     )}
                   </div>
                   {applicationData.adminRemarks && (
