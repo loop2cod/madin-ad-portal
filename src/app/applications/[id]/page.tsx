@@ -586,7 +586,7 @@ export default function ApplicationDetailPage() {
   return (
     <ProtectedRoute requiredPermissions={['view_all_applications', 'view_department_applications']} allowAny={true}>
       <DashboardLayout title="Application Details">
-        <div className="space-y-6 p-6">
+        <div className="space-y-6 p-6 overflow-hidden">
           {/* Header */}
           <div className="flex justify-between items-start">
             <div>
@@ -628,221 +628,6 @@ export default function ApplicationDetailPage() {
 
           <ScrollArea className="h-[76vh]">
             <div className="space-y-6">
-              
-              {/* Status Update Section */}
-              {(hasPermission('update_application_status') || hasRole('admission_officer')) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Status Management</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Display approved status information */}
-                    {applicationData.status === 'approved' ? (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="w-5 h-5 text-green-900" />
-                            <span className="text-lg font-semibold text-green-900">Application Approved</span>
-                          </div>
-                          <Badge className="bg-green-100 text-green-900 border-green-200">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Approved
-                          </Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                          {applicationData.admissionNumber && (
-                            <div>
-                              <Label className="text-green-900 font-medium">Admission Number:</Label>
-                              <p className="text-green-900 mt-1 font-bold text-lg">{applicationData.admissionNumber}</p>
-                            </div>
-                          )}
-                          {applicationData.reviewedBy && (
-                            <div>
-                              <Label className="text-green-900 font-medium">Approved By:</Label>
-                              <p className="text-green-900 mt-1">{applicationData.reviewedBy.name}</p>
-                              <p className="text-green-900 text-xs">{applicationData.reviewedBy.email}</p>
-                            </div>
-                          )}
-                          {applicationData.reviewedAt && (
-                            <div>
-                              <Label className="text-green-900 font-medium">Approved At:</Label>
-                              <p className="text-green-900 mt-1">{formatDateTime(applicationData.reviewedAt)}</p>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {applicationData.adminRemarks && (
-                          <div>
-                            <Label className="text-green-900 font-medium">Admin Remarks:</Label>
-                            <p className="text-green-900 mt-1 bg-green-50 p-2 rounded border border-green-700">
-                              {applicationData.adminRemarks}
-                            </p>
-                          </div>
-                        )}
-                        
-                        <div className="pt-2 border-t border-green-200">
-                          <p className="text-green-900 text-sm">
-                            <AlertCircle className="w-4 h-4 inline mr-1" />
-                            {hasRole('super_admin') 
-                              ? 'As super admin, you can override this status if needed.'
-                              : 'Status cannot be changed once approved. Contact administrator if changes are needed.'
-                            }
-                          </p>
-                        </div>
-                        
-                        {/* Super Admin Override Section */}
-                        {hasRole('super_admin') && (
-                          <div className="pt-3 border-t border-green-200">
-                            <Label className="text-green-900 font-medium text-sm mb-2 block">Super Admin Override:</Label>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleStatusUpdate('under_review')}
-                                disabled={statusUpdateLoading}
-                                className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
-                              >
-                                Set Under Review
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleStatusUpdate('rejected')}
-                                disabled={statusUpdateLoading}
-                                className="border-red-300 text-red-700 hover:bg-red-50"
-                              >
-                                Reject
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleStatusUpdate('waitlisted')}
-                                disabled={statusUpdateLoading}
-                                className="border-blue-300 text-blue-700 hover:bg-blue-50"
-                              >
-                                Waitlist
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label className="text-sm font-medium">Update Status</Label>
-                          <div className="flex gap-2 mt-2">
-                            <Button
-                              size="sm"
-                              variant={applicationData.status === 'under_review' ? 'default' : 'outline'}
-                              onClick={() => handleStatusUpdate('under_review')}
-                              disabled={statusUpdateLoading}
-                            >
-                              Under Review
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                if (!applicationData.admissionNumber) {
-                                  setShowAdmissionNumberInput(true);
-                                } else {
-                                  handleStatusUpdate('approved');
-                                }
-                              }}
-                              disabled={statusUpdateLoading}
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={applicationData.status === 'rejected' ? 'default' : 'outline'}
-                              onClick={() => handleStatusUpdate('rejected')}
-                              disabled={statusUpdateLoading}
-                            >
-                              Reject
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={applicationData.status === 'waitlisted' ? 'default' : 'outline'}
-                              onClick={() => handleStatusUpdate('waitlisted')}
-                              disabled={statusUpdateLoading}
-                            >
-                              Waitlist
-                            </Button>
-                          </div>
-                        </div>
-                        <div>
-                          <Label htmlFor="remarks" className="text-sm font-medium">Admin Remarks</Label>
-                          <Textarea
-                            id="remarks"
-                            value={remarks}
-                            onChange={(e) => setRemarks(e.target.value)}
-                            placeholder="Add remarks..."
-                            className="mt-2"
-                            rows={3}
-                          />
-                        </div>
-                      </div>
-                      
-                      {showAdmissionNumberInput && !applicationData.admissionNumber && (
-                        <div className="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
-                          <div className="space-y-3">
-                            <div>
-                              <Label htmlFor="admissionNumber" className="text-sm font-medium text-blue-900">
-                                Enter Admission Number <span className="text-red-500">*</span>
-                              </Label>
-                              <Input
-                                id="admissionNumber"
-                                type="text"
-                                value={admissionNumber}
-                                onChange={(e) => handleAdmissionNumberChange(e.target.value)}
-                                placeholder="e.g., MAD/2025-26/1234"
-                                className="mt-1"
-                                disabled={isCheckingAdmissionNumber}
-                              />
-                              {isCheckingAdmissionNumber && (
-                                <p className="text-xs text-blue-600 mt-1">Checking availability...</p>
-                              )}
-                              {admissionNumberError && (
-                                <p className="text-xs text-red-600 mt-1">{admissionNumberError}</p>
-                              )}
-                              {admissionNumber && !admissionNumberError && !isCheckingAdmissionNumber && (
-                                <p className="text-xs text-green-600 mt-1">✓ Admission number is available</p>
-                              )}
-                            </div>
-                            
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() => handleStatusUpdate('approved')}
-                                disabled={statusUpdateLoading || !admissionNumber.trim() || !!admissionNumberError || isCheckingAdmissionNumber}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                {statusUpdateLoading ? 'Approving...' : 'Approve with Admission Number'}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setShowAdmissionNumberInput(false);
-                                  setAdmissionNumber('');
-                                  setAdmissionNumberError('');
-                                }}
-                                disabled={statusUpdateLoading}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Department Management Section */}
               {(hasPermission('edit_applications') && (applicationData.canAssignDepartment || hasPermission('update_application_status'))) && (
@@ -1315,6 +1100,222 @@ export default function ApplicationDetailPage() {
                   </CardContent>
                 </Card>
               )}
+ 
+                       {/* Status Update Section */}
+              {(hasPermission('update_application_status') || hasRole('admission_officer')) && (
+                <Card data-status-section>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Status Management</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Display approved status information */}
+                    {applicationData.status === 'approved' ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5 text-green-900" />
+                            <span className="text-lg font-semibold text-green-900">Application Approved</span>
+                          </div>
+                          <Badge className="bg-green-100 text-green-900 border-green-200">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Approved
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                          {applicationData.admissionNumber && (
+                            <div>
+                              <Label className="text-green-900 font-medium">Admission Number:</Label>
+                              <p className="text-green-900 mt-1 font-bold text-lg">{applicationData.admissionNumber}</p>
+                            </div>
+                          )}
+                          {applicationData.reviewedBy && (
+                            <div>
+                              <Label className="text-green-900 font-medium">Approved By:</Label>
+                              <p className="text-green-900 mt-1">{applicationData.reviewedBy.name}</p>
+                              <p className="text-green-900 text-xs">{applicationData.reviewedBy.email}</p>
+                            </div>
+                          )}
+                          {applicationData.reviewedAt && (
+                            <div>
+                              <Label className="text-green-900 font-medium">Approved At:</Label>
+                              <p className="text-green-900 mt-1">{formatDateTime(applicationData.reviewedAt)}</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {applicationData.adminRemarks && (
+                          <div>
+                            <Label className="text-green-900 font-medium">Admin Remarks:</Label>
+                            <p className="text-green-900 mt-1 bg-green-50 p-2 rounded border border-green-700">
+                              {applicationData.adminRemarks}
+                            </p>
+                          </div>
+                        )}
+                        
+                        <div className="pt-2 border-t border-green-200">
+                          <p className="text-green-900 text-sm">
+                            <AlertCircle className="w-4 h-4 inline mr-1" />
+                            {hasRole('super_admin') 
+                              ? 'As super admin, you can override this status if needed.'
+                              : 'Status cannot be changed once approved. Contact administrator if changes are needed.'
+                            }
+                          </p>
+                        </div>
+                        
+                        {/* Super Admin Override Section */}
+                        {hasRole('super_admin') && (
+                          <div className="pt-3 border-t border-green-200">
+                            <Label className="text-green-900 font-medium text-sm mb-2 block">Super Admin Override:</Label>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleStatusUpdate('under_review')}
+                                disabled={statusUpdateLoading}
+                                className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+                              >
+                                Set Under Review
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleStatusUpdate('rejected')}
+                                disabled={statusUpdateLoading}
+                                className="border-red-300 text-red-700 hover:bg-red-50"
+                              >
+                                Reject
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleStatusUpdate('waitlisted')}
+                                disabled={statusUpdateLoading}
+                                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                              >
+                                Waitlist
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium">Update Status</Label>
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              size="sm"
+                              variant={applicationData.status === 'under_review' ? 'default' : 'outline'}
+                              onClick={() => handleStatusUpdate('under_review')}
+                              disabled={statusUpdateLoading}
+                            >
+                              Under Review
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                if (!applicationData.admissionNumber) {
+                                  setShowAdmissionNumberInput(true);
+                                } else {
+                                  handleStatusUpdate('approved');
+                                }
+                              }}
+                              disabled={statusUpdateLoading}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={applicationData.status === 'rejected' ? 'default' : 'outline'}
+                              onClick={() => handleStatusUpdate('rejected')}
+                              disabled={statusUpdateLoading}
+                            >
+                              Reject
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={applicationData.status === 'waitlisted' ? 'default' : 'outline'}
+                              onClick={() => handleStatusUpdate('waitlisted')}
+                              disabled={statusUpdateLoading}
+                            >
+                              Waitlist
+                            </Button>
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="remarks" className="text-sm font-medium">Admin Remarks</Label>
+                          <Textarea
+                            id="remarks"
+                            value={remarks}
+                            onChange={(e) => setRemarks(e.target.value)}
+                            placeholder="Add remarks..."
+                            className="mt-2"
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+                      
+                      {showAdmissionNumberInput && !applicationData.admissionNumber && (
+                        <div className="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
+                          <div className="space-y-3">
+                            <div>
+                              <Label htmlFor="admissionNumber" className="text-sm font-medium text-blue-900">
+                                Enter Admission Number <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="admissionNumber"
+                                type="text"
+                                value={admissionNumber}
+                                onChange={(e) => handleAdmissionNumberChange(e.target.value)}
+                                placeholder="e.g., MAD/2025-26/1234"
+                                className="mt-1"
+                                disabled={isCheckingAdmissionNumber}
+                              />
+                              {isCheckingAdmissionNumber && (
+                                <p className="text-xs text-blue-600 mt-1">Checking availability...</p>
+                              )}
+                              {admissionNumberError && (
+                                <p className="text-xs text-red-600 mt-1">{admissionNumberError}</p>
+                              )}
+                              {admissionNumber && !admissionNumberError && !isCheckingAdmissionNumber && (
+                                <p className="text-xs text-green-600 mt-1">✓ Admission number is available</p>
+                              )}
+                            </div>
+                            
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handleStatusUpdate('approved')}
+                                disabled={statusUpdateLoading || !admissionNumber.trim() || !!admissionNumberError || isCheckingAdmissionNumber}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                {statusUpdateLoading ? 'Approving...' : 'Approve with Admission Number'}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setShowAdmissionNumberInput(false);
+                                  setAdmissionNumber('');
+                                  setAdmissionNumberError('');
+                                }}
+                                disabled={statusUpdateLoading}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
 
               {/* Audit Trail - Only visible to users with edit permissions */}
               {hasPermission('edit_applications') && (
