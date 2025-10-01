@@ -139,11 +139,24 @@ interface ApplicationData {
       _id: string;
       amount: number;
       currency: string;
-      status: string;
+      status: 'pending' | 'processing' | 'completed' | 'failed' | 'expired';
       paymentMethod: string;
       receipt: string;
+      attempts?: number;
+      lastError?: string;
       verifiedAt?: string;
+      verifiedBy?: string;
+      razorpayPaymentId?: string;
+      razorpayOrderId?: string;
+      statusHistory?: Array<{
+        status: string;
+        updatedBy: string;
+        updatedAt: string;
+        reason: string;
+        previousStatus: string;
+      }>;
       createdAt: string;
+      updatedAt?: string;
     };
   };
   declaration?: {
