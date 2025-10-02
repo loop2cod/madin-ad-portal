@@ -17,9 +17,7 @@ import {
   CreateFeeStructureData, 
   FeeStructureType, 
   FEE_STRUCTURE_TYPES, 
-  DEFAULT_SEMESTERS,
   FeeComponent,
-  SemesterFee,
   calculateComponentTotal,
   calculateGrandTotal
 } from "@/types/fee-structure";
@@ -53,11 +51,9 @@ export default function CreateFeeStructurePage() {
         semesterName: 'Semester 1',
         fees: { ...defaultFeeComponent }
       }
-    ],
-    hostelFee: 0
+    ]
   });
 
-  const canManageFeeStructures = hasPermission('manage_settings');
 
   const updateSemesterFee = (
     semesterIndex: number,
@@ -151,206 +147,210 @@ export default function CreateFeeStructurePage() {
   return (
     <ProtectedRoute requiredPermissions={['manage_settings']}>
       <DashboardLayout title="Create Fee Structure">
-        <div className="p-6">
-          <div className="flex items-center gap-4 mb-6">
-            <Link href="/fee-structures">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Fee Structures
-              </Button>
-            </Link>
+        <div className="max-w-6xl mx-auto p-2 md:p-6">
+          <div className="md:flex md:justify-between  items-center gap-4 mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Create Fee Structure</h1>
               <p className="text-gray-600 mt-2">
                 Set up a new fee structure for admission
               </p>
             </div>
+             <Link href="/fee-structures">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Fee Structures
+              </Button>
+            </Link>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>
-              Configure the basic details of the fee structure
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="type">Fee Structure Type</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(value: FeeStructureType) => 
-                    setFormData(prev => ({ ...prev, type: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(FEE_STRUCTURE_TYPES).map(([key, label]:any) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="academicYear">Academic Year</Label>
-                <Input
-                  id="academicYear"
-                  value={formData.academicYear}
-                  onChange={(e) => setFormData(prev => ({ ...prev, academicYear: e.target.value }))}
-                  placeholder="2025"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Regular Batch - 2025 Admission"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Additional details about this fee structure..."
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Effective Date</Label>
-                <DatePicker
-                  date={formData.effectiveDate}
-                  setDate={(date:any) => date && setFormData(prev => ({ ...prev, effectiveDate: date }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="hostelFee">Hostel Fee (per month)</Label>
-                <Input
-                  id="hostelFee"
-                  type="number"
-                  value={formData.hostelFee}
-                  onChange={(e) => setFormData(prev => ({ ...prev, hostelFee: Number(e.target.value) }))}
-                  placeholder="6000"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Semester Fee Structure</CardTitle>
-            <CardDescription>
-              Configure fees for each semester
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {formData.semesters.map((semester, semesterIndex) => (
-              <div key={semesterIndex} className="border rounded-lg p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold">{semester.semesterName}</h4>
-                  {formData.semesters.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeSemester(semesterIndex)}
+            <Card>
+              <CardHeader>
+                <CardTitle>Basic Information</CardTitle>
+                <CardDescription>
+                  Configure the basic details of the fee structure
+                </CardDescription>
+              </CardHeader>
+              <CardContent className='space-y-2'>
+                {/* Two Column Layout for Type and Academic Year */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="type" className="text-sm font-medium">Fee Structure Type</Label>
+                    <Select
+                      value={formData.type}
+                      onValueChange={(value: FeeStructureType) => 
+                        setFormData(prev => ({ ...prev, type: value }))
+                      }
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(FEE_STRUCTURE_TYPES).map(([key, label]:any) => (
+                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label className="text-sm">Admission Fee</Label>
+                  <div className="space-y-1">
+                    <Label htmlFor="academicYear" className="text-sm font-medium">Academic Year</Label>
                     <Input
-                      type="number"
-                      value={semester.fees.admissionFee}
-                      onChange={(e) => updateSemesterFee(semesterIndex, 'admissionFee', Number(e.target.value))}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm">Exam/Permit Reg Fee</Label>
-                    <Input
-                      type="number"
-                      value={semester.fees.examPermitRegFee}
-                      onChange={(e) => updateSemesterFee(semesterIndex, 'examPermitRegFee', Number(e.target.value))}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm">Special Fee</Label>
-                    <Input
-                      type="number"
-                      value={semester.fees.specialFee}
-                      onChange={(e) => updateSemesterFee(semesterIndex, 'specialFee', Number(e.target.value))}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm">Tuition Fee</Label>
-                    <Input
-                      type="number"
-                      value={semester.fees.tuitionFee}
-                      onChange={(e) => updateSemesterFee(semesterIndex, 'tuitionFee', Number(e.target.value))}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm">Others</Label>
-                    <Input
-                      type="number"
-                      value={semester.fees.others}
-                      onChange={(e) => updateSemesterFee(semesterIndex, 'others', Number(e.target.value))}
+                      id="academicYear"
+                      value={formData.academicYear}
+                      onChange={(e) => setFormData(prev => ({ ...prev, academicYear: e.target.value }))}
+                      placeholder="2025"
+                      required
                     />
                   </div>
                 </div>
-                <div className="text-sm font-medium p-2 bg-blue-50 rounded">
-                  Semester Total: {formatCurrency(calculateComponentTotal(semester.fees))}
+
+                {/* Full Width Title */}
+                <div className="space-y-1">
+                  <Label htmlFor="title" className="text-sm font-medium">Title</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Regular Batch - 2025 Admission"
+                    required
+                  />
                 </div>
-              </div>
-            ))}
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={addSemester}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Semester
-            </Button>
-          </CardContent>
-        </Card>
+                {/* Two Column Layout for Description and Date */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="description" className="text-sm font-medium">Description (Optional)</Label>
+                    <Textarea
+                      id="description"
+                      className="resize-none min-h-[100px]"
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Additional details about this fee structure..."
+                    />
+                  </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <div className="font-medium text-gray-600">Total Fee Structure</div>
-              <div className="text-3xl font-bold text-primary mt-2">
-                {formatCurrency(totals)}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium">Effective Date</Label>
+                    <div className="w-full">
+                      <DatePicker
+                        date={formData.effectiveDate}
+                        setDate={(date:any) => date && setFormData(prev => ({ ...prev, effectiveDate: date }))}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="flex gap-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Semester Fee Structure</CardTitle>
+                    <CardDescription>
+                      Configure fees for each semester
+                    </CardDescription>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addSemester}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Semester
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {formData.semesters.map((semester, semesterIndex) => (
+                  <div key={semesterIndex} className="border rounded-lg p-2 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-lg font-semibold">{semester.semesterName}</h4>
+                      {formData.semesters.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeSemester(semesterIndex)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <div>
+                        <Label className="text-sm">Admission Fee</Label>
+                        <Input
+                          type="number"
+                          value={semester.fees.admissionFee || ''}
+                          onChange={(e) => updateSemesterFee(semesterIndex, 'admissionFee', Number(e.target.value))}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm">Exam/Permit Reg Fee</Label>
+                        <Input
+                          type="number"
+                          value={semester.fees.examPermitRegFee || ''}
+                          onChange={(e) => updateSemesterFee(semesterIndex, 'examPermitRegFee', Number(e.target.value))}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm">Special Fee</Label>
+                        <Input
+                          type="number"
+                          value={semester.fees.specialFee || ''}
+                          onChange={(e) => updateSemesterFee(semesterIndex, 'specialFee', Number(e.target.value))}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm">Tuition Fee</Label>
+                        <Input
+                          type="number"
+                          value={semester.fees.tuitionFee || ''}
+                          onChange={(e) => updateSemesterFee(semesterIndex, 'tuitionFee', Number(e.target.value))}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm">Others</Label>
+                        <Input
+                          type="number"
+                          value={semester.fees.others || ''}
+                          onChange={(e) => updateSemesterFee(semesterIndex, 'others', Number(e.target.value))}
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="text-sm font-medium p-3 bg-blue-50 rounded border border-blue-200">
+                      Semester Total: {formatCurrency(calculateComponentTotal(semester.fees))}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center">
+                  <div className="font-medium text-gray-600">Total Fee Structure</div>
+                  <div className="text-3xl font-bold text-primary mt-2">
+                    {formatCurrency(totals)}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex flex-col sm:flex-row gap-4">
               <Button type="submit" disabled={isLoading}>
                 <Save className="h-4 w-4 mr-2" />
                 {isLoading ? 'Creating...' : 'Create Fee Structure'}

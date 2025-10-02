@@ -59,7 +59,7 @@ export const PaymentUpdateForm: React.FC<PaymentUpdateFormProps> = ({
   const [formData, setFormData] = useState({
     paymentStatus: paymentDetails?.status || 'pending',
     paymentMethod: paymentDetails?.paymentMethod || 'cash',
-    amount: paymentDetails?.amount?.toString() || '500',
+    amount: paymentDetails?.amount && paymentDetails.amount !== 0 ? paymentDetails.amount.toString() : '',
     receipt: paymentDetails?.receipt || '',
     reason: '',
     errorMessage: ''
@@ -115,7 +115,7 @@ export const PaymentUpdateForm: React.FC<PaymentUpdateFormProps> = ({
     setFormData({
       paymentStatus: paymentDetails?.status || 'pending',
       paymentMethod: paymentDetails?.paymentMethod || 'cash',
-      amount: paymentDetails?.amount?.toString() || '500',
+      amount: paymentDetails?.amount && paymentDetails.amount !== 0 ? paymentDetails.amount.toString() : '',
       receipt: paymentDetails?.receipt || '',
       reason: '',
       errorMessage: ''

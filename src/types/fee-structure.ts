@@ -35,7 +35,6 @@ export interface FeeStructure {
   isActive: boolean;
   semesters: SemesterFee[];
   grandTotal: number;
-  hostelFee?: number;
   createdAt: Date;
   updatedAt: Date;
   createdBy: string;
@@ -48,7 +47,6 @@ export interface CreateFeeStructureData {
   description?: string;
   effectiveDate: Date;
   semesters: Omit<SemesterFee, 'total'>[];
-  hostelFee?: number;
 }
 
 export interface UpdateFeeStructureData extends Partial<CreateFeeStructureData> {

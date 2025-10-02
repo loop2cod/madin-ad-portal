@@ -44,8 +44,7 @@ export default function EditFeeStructurePage() {
     description: '',
     effectiveDate: new Date(),
     isActive: true,
-    semesters: [],
-    hostelFee: 0
+    semesters: []
   });
 
   const canManageFeeStructures = hasPermission('manage_settings');
@@ -66,8 +65,7 @@ export default function EditFeeStructurePage() {
           description: data.description || '',
           effectiveDate: new Date(data.effectiveDate),
           isActive: data.isActive,
-          semesters: data.semesters,
-          hostelFee: data.hostelFee || 0
+          semesters: data.semesters
         });
       } catch (error: any) {
         console.error('Error fetching fee structure:', error);
@@ -300,23 +298,12 @@ export default function EditFeeStructurePage() {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Effective Date</Label>
                 <DatePicker
                   date={formData.effectiveDate}
                   setDate={(date:any) => date && setFormData(prev => ({ ...prev, effectiveDate: date }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="hostelFee">Hostel Fee (per month)</Label>
-                <Input
-                  id="hostelFee"
-                  type="number"
-                  value={formData.hostelFee}
-                  onChange={(e) => setFormData(prev => ({ ...prev, hostelFee: Number(e.target.value) }))}
-                  placeholder="6000"
                 />
               </div>
 

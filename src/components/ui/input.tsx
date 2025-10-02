@@ -2,7 +2,45 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+function Input({ className, type, value, onChange, ...props }: React.ComponentProps<"input">) {
+  const [internalValue, setInternalValue] = React.useState(value || '');
+  const [hasUserInput, setHasUserInput] = React.useState(false);
+
+  // Handle number input to prevent showing 0 by default
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInternalValue(newValue);
+    setHasUserInput(true);
+    
+    if (onChange) {
+      onChange(e);
+    }
+  };
+
+  // For number inputs, show empty string instead of 0 when no user input
+  const displayValue = React.useMemo(() => {
+    if (type === 'number') {
+      // If user hasn't interacted and value is 0 or empty, show empty
+      if (!hasUserInput && (value === 0 || value === '0' || !value)) {
+        return '';
+      }
+      // If user has interacted, show their input
+      if (hasUserInput) {
+        return internalValue;
+      }
+      // Otherwise show the actual value
+      return value || '';
+    }
+    return value;
+  }, [type, value, hasUserInput, internalValue]);
+
+  // Update internal value when external value changes
+  React.useEffect(() => {
+    if (value !== internalValue && !hasUserInput) {
+      setInternalValue(value || '');
+    }
+  }, [value, internalValue, hasUserInput]);
+
   return (
     <input
       type={type}
@@ -13,6 +51,8 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
         "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
         className
       )}
+      value={displayValue}
+      onChange={handleChange}
       {...props}
     />
   )

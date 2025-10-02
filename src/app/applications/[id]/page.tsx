@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -204,6 +204,11 @@ export default function ApplicationDetailPage() {
   const [isCheckingAdmissionNumber, setIsCheckingAdmissionNumber] = useState(false);
   const [admissionNumberError, setAdmissionNumberError] = useState('');
   const [showAdmissionNumberInput, setShowAdmissionNumberInput] = useState(false);
+  const [isFetchingNextAdmissionNumber, setIsFetchingNextAdmissionNumber] = useState(false);
+  const [lastAssignedNumber, setLastAssignedNumber] = useState<string | null>(null);
+  const [isManualInput, setIsManualInput] = useState(false);
+  const admissionNumberInputRef = useRef<HTMLInputElement>(null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -235,6 +240,15 @@ export default function ApplicationDetailPage() {
     fetchApplicationData();
   }, [applicationId, toast, hasPermission]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const checkAdmissionNumberAvailability = async (admissionNumberToCheck: string) => {
     if (!admissionNumberToCheck.trim()) {
       setAdmissionNumberError('');
@@ -264,16 +278,69 @@ export default function ApplicationDetailPage() {
     }
   };
 
-  const handleAdmissionNumberChange = (value: string) => {
+  const handleAdmissionNumberChange = useCallback((value: string) => {
     setAdmissionNumber(value);
+    setIsManualInput(true); // Mark as manual input when user types
+    
+    // Clear any existing timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    
     if (value.trim()) {
+      // Store the current input element reference
+      const currentInput = admissionNumberInputRef.current;
+      const currentSelectionStart:any = currentInput?.selectionStart;
+      const currentSelectionEnd:any = currentInput?.selectionEnd;
+      
       // Debounce the availability check
-      const timeoutId = setTimeout(() => {
-        checkAdmissionNumberAvailability(value);
-      }, 500);
-      return () => clearTimeout(timeoutId);
+      debounceTimeoutRef.current = setTimeout(() => {
+        checkAdmissionNumberAvailability(value).finally(() => {
+          // Restore focus and cursor position after API call
+          if (currentInput && document.activeElement !== currentInput) {
+            currentInput.focus();
+            if (currentSelectionStart !== null && currentSelectionEnd !== null) {
+              currentInput.setSelectionRange(currentSelectionStart, currentSelectionEnd);
+            }
+          }
+        });
+      }, 800); // Increased debounce time to reduce API calls
     } else {
       setAdmissionNumberError('');
+    }
+  }, []);
+
+  const fetchNextAdmissionNumber = async () => {
+    setIsFetchingNextAdmissionNumber(true);
+    setAdmissionNumberError('');
+    
+    try {
+      const response = await get<any>('/api/v1/admission/admin/next-admission-number');
+      
+      if (response.success && response.data?.nextAdmissionNumber) {
+        setAdmissionNumber(response.data.nextAdmissionNumber);
+        setLastAssignedNumber(response.data.lastAssignedNumber);
+        setIsManualInput(false); // This is auto-filled, not manual
+        
+        const lastAssigned = response.data.lastAssignedNumber;
+        const nextNumber = response.data.nextAdmissionNumber;
+        
+        toast({
+          title: 'Auto-filled',
+          description: `Admission number auto-filled with: ${nextNumber}`,
+        });
+      } else {
+        throw new Error(response.message || 'Failed to get next admission number');
+      }
+    } catch (error) {
+      console.error('Error fetching next admission number:', error);
+      toast({
+        title: 'Auto-fill Failed',
+        description: 'Could not auto-fill admission number. Please enter manually.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsFetchingNextAdmissionNumber(false);
     }
   };
 
@@ -1286,16 +1353,18 @@ export default function ApplicationDetailPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => {
+                              onClick={async () => {
                                 if (!applicationData.admissionNumber) {
                                   setShowAdmissionNumberInput(true);
+                                  // Auto-fill the next admission number
+                                  await fetchNextAdmissionNumber();
                                 } else {
                                   handleStatusUpdate('approved');
                                 }
                               }}
-                              disabled={statusUpdateLoading}
+                              disabled={statusUpdateLoading || isFetchingNextAdmissionNumber}
                             >
-                              Approve
+                              {isFetchingNextAdmissionNumber ? 'Loading...' : 'Approve'}
                             </Button>
                             <Button
                               size="sm"
@@ -1332,17 +1401,28 @@ export default function ApplicationDetailPage() {
                         <div className="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
                           <div className="space-y-3">
                             <div>
-                              <Label htmlFor="admissionNumber" className="text-sm font-medium text-blue-900">
-                                Enter Admission Number <span className="text-red-500">*</span>
-                              </Label>
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="admissionNumber" className="text-sm font-medium text-blue-900">
+                                  Enter Admission Number <span className="text-red-500">*</span> (Last Number : {lastAssignedNumber})
+                                </Label>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={fetchNextAdmissionNumber}
+                                  disabled={isFetchingNextAdmissionNumber || isCheckingAdmissionNumber}
+                                  className="text-blue-600 hover:text-blue-700 p-1 h-auto"
+                                >
+                                  {isFetchingNextAdmissionNumber ? 'Getting...' : 'Auto-fill Next'}
+                                </Button>
+                              </div>
                               <Input
+                                ref={admissionNumberInputRef}
                                 id="admissionNumber"
                                 type="text"
                                 value={admissionNumber}
                                 onChange={(e) => handleAdmissionNumberChange(e.target.value)}
                                 placeholder="e.g., MAD/2025-26/1234"
                                 className="mt-1"
-                                disabled={isCheckingAdmissionNumber}
                               />
                               {isCheckingAdmissionNumber && (
                                 <p className="text-xs text-blue-600 mt-1">Checking availability...</p>
