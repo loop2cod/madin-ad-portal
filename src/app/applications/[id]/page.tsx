@@ -35,6 +35,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { DepartmentAssignment } from '@/components/DepartmentAssignment';
 import { AuditTrail } from '@/components/AuditTrail';
 import { PaymentUpdateForm } from '@/components/PaymentUpdateForm';
+import { FeeStructureAssignment } from '@/components/FeeStructureAssignment';
 
 interface ApplicationData {
   _id: string;
@@ -187,6 +188,20 @@ interface ApplicationData {
     specialization?: string;
   }>;
   canAssignDepartment?: boolean;
+  feeStructure?: {
+    id: string;
+    title: string;
+    type: string;
+    academicYear: string;
+    grandTotal: number;
+    description?: string;
+    assignedAt?: string;
+    assignedBy?: {
+      _id: string;
+      name: string;
+      email: string;
+    };
+  };
 }
 
 export default function ApplicationDetailPage() {
@@ -458,6 +473,34 @@ export default function ApplicationDetailPage() {
         }
       });
       // Refresh audit trail to show the payment update log
+      setAuditTrailKey(prev => prev + 1);
+    }
+  };
+
+  const handleFeeStructureAssigned = (assignedFeeStructure: any) => {
+    if (applicationData) {
+      // Handle both student fee assignment and application fee structure
+      if (assignedFeeStructure.studentFeeAssignment) {
+        // Student fee assignment - update the studentFeeAssignment field
+        setApplicationData({
+          ...applicationData,
+          studentFeeAssignment: assignedFeeStructure.studentFeeAssignment
+        });
+      } else if (assignedFeeStructure.feeStructure) {
+        // Application fee structure - update the feeStructure field
+        setApplicationData({
+          ...applicationData,
+          feeStructure: assignedFeeStructure.feeStructure
+        });
+      } else {
+        // Direct assignment (legacy format) - treat as application fee structure
+        setApplicationData({
+          ...applicationData,
+          feeStructure: assignedFeeStructure
+        });
+      }
+      
+      // Refresh audit trail to show the fee structure assignment log
       setAuditTrailKey(prev => prev + 1);
     }
   };
@@ -1466,6 +1509,21 @@ export default function ApplicationDetailPage() {
                 </Card>
               )}
 
+              {/* Fee Structure Assignment - Only visible when application is approved */}
+              {(hasPermission('update_application_status') || hasRole('admission_officer')) && (
+                <FeeStructureAssignment
+                  applicationId={applicationData._id}
+                  currentFeeStructure={applicationData.feeStructure}
+                  studentFeeAssignment={applicationData.studentFeeAssignment}
+                  onFeeStructureAssigned={handleFeeStructureAssigned}
+                  canAssign={hasPermission('update_application_status') || hasRole('admission_officer')}
+                  applicationData={{
+                    status: applicationData.status,
+                    admissionNumber: applicationData.admissionNumber,
+                    programSelections: applicationData.programSelections
+                  }}
+                />
+              )}
 
               {/* Audit Trail - Only visible to users with edit permissions */}
               {hasPermission('edit_applications') && (
