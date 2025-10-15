@@ -202,6 +202,66 @@ interface ApplicationData {
       email: string;
     };
   };
+  studentFeeAssignment?: {
+    _id: string;
+    student: {
+      _id: string;
+      name: string;
+      admissionNumber: string;
+      department: string;
+    };
+    feeStructure: {
+      _id: string;
+      title: string;
+      type: string;
+      academicYear: string;
+    };
+    feeStructureSnapshot: {
+      id: string;
+      title: string;
+      type: string;
+      academicYear: string;
+      description?: string;
+      semesters: Array<{
+        semester: number;
+        semesterName: string;
+        fees: {
+          admissionFee: number;
+          examPermitRegFee: number;
+          specialFee: number;
+          tuitionFee: number;
+          others: number;
+        };
+        total: number;
+      }>;
+      grandTotal: number;
+      hostelFee: number;
+      effectiveDate: string;
+    };
+    customizations?: Array<{
+      semester: number;
+      fees: {
+        admissionFee?: number;
+        examPermitRegFee?: number;
+        specialFee?: number;
+        tuitionFee?: number;
+        others?: number;
+      };
+      reason?: string;
+      customizedBy: {
+        name: string;
+        email: string;
+      };
+      customizedAt: string;
+    }>;
+    assignedBy: {
+      name: string;
+      email: string;
+    };
+    assignedAt: string;
+    notes?: string;
+    isActive: boolean;
+  };
 }
 
 export default function ApplicationDetailPage() {

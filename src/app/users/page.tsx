@@ -147,7 +147,7 @@ export default function UsersPage() {
     }
   };
 
-  const getRoleDisplayName = (role: UserRole) => {
+  const getRoleDisplayName = (role:any) => {
     switch (role) {
       case 'super_admin':
         return 'Super Admin';
@@ -162,7 +162,7 @@ export default function UsersPage() {
     }
   };
 
-  const getRoleIcon = (role: UserRole) => {
+  const getRoleIcon = (role: any) => {
     switch (role) {
       case 'super_admin':
         return <Shield className="w-3 h-3" />;

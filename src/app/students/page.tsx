@@ -346,7 +346,7 @@ export default function StudentLoginsPage() {
       const formData = new FormData();
       formData.append('excel', selectedFile);
 
-      const response = await post('/api/v1/admin/students/upload-registration-numbers', formData, {
+      const response = await post<any>('/api/v1/admin/students/upload-registration-numbers', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

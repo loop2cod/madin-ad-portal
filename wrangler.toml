@@ -1,0 +1,46 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "ad-portal"
+compatibility_date = "2024-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+name = "ad-portal-production"
+
+[env.staging]
+name = "ad-portal-staging"
+
+# Build configuration
+pages_build_output_dir = ".vercel/output/static"
+
+# Environment variables (add your specific ones)
+[vars]
+NODE_ENV = "production"
+# Add other environment variables as needed
+# NEXT_PUBLIC_API_URL = "https://your-api-domain.com"
+
+# KV bindings (if needed)
+# [[kv_namespaces]]
+# binding = "MY_KV_NAMESPACE"
+# id = "your-kv-namespace-id"
+# preview_id = "your-preview-kv-namespace-id"
+
+# D1 bindings (if needed)
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "my-database"
+# database_id = "your-database-id"
+
+# R2 bindings (if needed)
+# [[r2_buckets]]
+# binding = "MY_BUCKET"
+# bucket_name = "my-bucket"
+
+# Worker limits
+[limits]
+cpu_ms = 30000
+
+# Custom domains (configure after deployment)
+# [env.production]
+# routes = [
+#   { pattern = "yourdomain.com/*", custom_domain = true }
+# ]

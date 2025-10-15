@@ -5,8 +5,15 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "build:workers": "next build && npx @opennextjs/cloudflare",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy": "npm run build:workers && wrangler pages deploy",
+    "deploy:staging": "npm run build:workers && wrangler pages deploy --env staging",
+    "deploy:production": "npm run build:workers && wrangler pages deploy --env production",
+    "wrangler:login": "wrangler auth login",
+    "wrangler:logout": "wrangler auth logout",
+    "wrangler:whoami": "wrangler auth whoami"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.1.0",
@@ -53,6 +60,7 @@
     "eslint-config-next": "15.3.4",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^3.84.1"
   }
 }
