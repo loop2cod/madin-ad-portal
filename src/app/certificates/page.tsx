@@ -36,6 +36,7 @@ interface CertificateRequest {
     name: string;
     email: string;
     admissionNumber: string;
+    registrationNumber: string;
     department: string;
   };
   certificateType: string;
@@ -162,10 +163,9 @@ export default function AdminCertificatesPage() {
         setPagination(response.pagination);
       }
     } catch (error) {
-      console.error('Failed to fetch certificate requests:', error);
       toast({
         title: "Error",
-        description: "Failed to load certificate requests",
+        description: "Failed to load requests",
         variant: "destructive",
       });
     } finally {
@@ -275,8 +275,8 @@ export default function AdminCertificatesPage() {
   }
 
   return (
-    <DashboardLayout title="Certificate Management">
-      <div className="space-y-6">
+    <DashboardLayout title="Student Requests">
+      <div className="space-y-6 md:p-6 p-3">
         {/* Header Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
@@ -394,7 +394,7 @@ export default function AdminCertificatesPage() {
         {/* Requests Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Certificate Requests</CardTitle>
+            <CardTitle>Student Requests</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -419,7 +419,8 @@ export default function AdminCertificatesPage() {
                       <TableCell>
                         <div>
                           <p className="font-medium">{request.studentId.name}</p>
-                          <p className="text-sm text-gray-500">{request.studentId.admissionNumber}</p>
+                          <p className="text-sm text-gray-500">AD : {request.studentId.admissionNumber}</p>
+                          <p className="text-sm text-gray-500">RG : {request.studentId.registrationNumber}</p>
                           <p className="text-xs text-gray-400">{request.studentId.department}</p>
                         </div>
                       </TableCell>
@@ -483,7 +484,7 @@ export default function AdminCertificatesPage() {
                               onClick={() => handleGenerateCertificate(request)}
                               className="bg-blue-600 hover:bg-blue-700"
                             >
-                              Mark Ready
+                             Issue Certificate
                             </Button>
                           )}
                           
@@ -633,14 +634,18 @@ export default function AdminCertificatesPage() {
                     <Label className="text-sm font-medium text-gray-500">Student Name</Label>
                     <p className="font-semibold">{selectedRequest.studentId.name}</p>
                   </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">Admission Number</Label>
-                    <p className="font-semibold">{selectedRequest.studentId.admissionNumber}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-500">Department</Label>
-                    <p className="font-semibold">{selectedRequest.studentId.department}</p>
-                  </div>
+                   <div>
+                     <Label className="text-sm font-medium text-gray-500">Admission Number</Label>
+                     <p className="font-semibold">{selectedRequest.studentId.admissionNumber}</p>
+                   </div>
+                   <div>
+                     <Label className="text-sm font-medium text-gray-500">Registration Number</Label>
+                     <p className="font-semibold">{selectedRequest.studentId.registrationNumber}</p>
+                   </div>
+                   <div>
+                     <Label className="text-sm font-medium text-gray-500">Department</Label>
+                     <p className="font-semibold">{selectedRequest.studentId.department}</p>
+                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-500">Email</Label>
                     <p className="font-semibold">{selectedRequest.studentId.email}</p>

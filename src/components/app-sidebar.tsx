@@ -63,7 +63,7 @@ const getNavigationItems = (user: any) => {
         permission: "view_all_applications"
       },
       {
-        title: "Certificates",
+        title: "Student Requests",
         url: "/certificates",
         icon: Award,
         permission: "view_all_applications"
@@ -129,7 +129,7 @@ const getNavigationItems = (user: any) => {
         permission: "view_all_applications"
       },
       {
-        title: "Certificates",
+        title: "Student Requests",
         url: "/certificates",
         icon: Award,
         permission: "view_all_applications"
@@ -177,7 +177,7 @@ const getNavigationItems = (user: any) => {
         permission: "view_department_applications"
       },
       {
-        title: "Certificates",
+        title: "Student Requests",
         url: "/certificates",
         icon: Award,
         permission: "view_department_applications"
