@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { get, put, post } from '@/utilities/AxiosInterceptor';
 import { format } from 'date-fns';
 import { 
@@ -165,7 +166,7 @@ interface ApplicationData {
     digitalSignature?: string;
     agreedAt?: string;
   };
-  status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'waitlisted';
+  status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'waitlisted' | 'cancelled';
   currentStage: string;
   isExistingApplication?: boolean;
   createdAt: string;
@@ -178,6 +179,7 @@ interface ApplicationData {
   reviewedAt?: string;
   adminRemarks?: string;
   admissionNumber?: string;
+  tcNumber?: string;
   department?: string;
   preferredBranches?: Array<{
     branch: string;
@@ -284,7 +286,10 @@ export default function ApplicationDetailPage() {
   const [isManualInput, setIsManualInput] = useState(false);
   const admissionNumberInputRef = useRef<HTMLInputElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { toast } = useToast();
+   const [tcNumber, setTcNumber] = useState('');
+   const [showCancelInput, setShowCancelInput] = useState(false);
+   const [showCancelDialog, setShowCancelDialog] = useState(false);
+   const { toast } = useToast();
 
   useEffect(() => {
     const fetchApplicationData = async () => {
@@ -422,9 +427,9 @@ export default function ApplicationDetailPage() {
   const handleStatusUpdate = async (newStatus: string) => {
     if (!applicationData) return;
 
-    // Prevent status changes FROM approved status (unless super_admin)
-    // Admission officers can approve, but once approved, only super_admin can change it
-    if (applicationData.status === 'approved' && !hasRole('super_admin')) {
+    // Prevent status changes FROM approved status (unless super_admin or cancelling)
+    // Admission officers can approve, but once approved, only super_admin can change it (except for cancelling)
+    if (applicationData.status === 'approved' && !hasRole('super_admin') && newStatus !== 'cancelled') {
       toast({
         title: 'Cannot Change Status',
         description: 'Application status cannot be changed once approved. Contact administrator if changes are needed.',
@@ -466,17 +471,23 @@ export default function ApplicationDetailPage() {
         requestBody.admissionNumber = admissionNumber.trim();
       }
 
+      // Include TC number if cancelling
+      if (newStatus === 'cancelled' && tcNumber.trim()) {
+        requestBody.tcNumber = tcNumber.trim();
+      }
+
       const response = await put<any>(`/api/v1/admission/admin/${applicationData._id}/status`, requestBody);
 
       if (response.success) {
         // Update the application data with the new status and any updated fields from the response
         setApplicationData({
           ...applicationData,
-          status: newStatus as 'pending' | 'under_review' | 'approved' | 'rejected' | 'waitlisted',
+          status: newStatus as 'pending' | 'under_review' | 'approved' | 'rejected' | 'waitlisted' | 'cancelled',
           adminRemarks: remarks,
           reviewedBy: response.data?.reviewedBy || applicationData.reviewedBy,
           reviewedAt: response.data?.reviewedAt || applicationData.reviewedAt,
-          admissionNumber: response.data?.admissionNumber || applicationData.admissionNumber
+          admissionNumber: response.data?.admissionNumber || applicationData.admissionNumber,
+          tcNumber: response.data?.tcNumber || applicationData.tcNumber
         });
         
         const successMessage = newStatus === 'approved' && response.data?.admissionNumber 
@@ -493,6 +504,12 @@ export default function ApplicationDetailPage() {
           setAdmissionNumber('');
           setAdmissionNumberError('');
           setShowAdmissionNumberInput(false);
+        }
+
+        // Clear TC number input after successful cancellation
+        if (newStatus === 'cancelled') {
+          setTcNumber('');
+          setShowCancelInput(false);
         }
         
         // Refresh audit trail to show the new status change
@@ -583,6 +600,8 @@ export default function ApplicationDetailPage() {
         return 'bg-yellow-100 text-yellow-800';
       case 'waitlisted':
         return 'bg-blue-100 text-blue-800';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800';
       case 'pending':
         return 'bg-gray-100 text-gray-800';
       default:
@@ -600,6 +619,8 @@ export default function ApplicationDetailPage() {
         return <Clock className="w-4 h-4" />;
       case 'waitlisted':
         return <AlertCircle className="w-4 h-4" />;
+      case 'cancelled':
+        return <XCircle className="w-4 h-4" />;
       case 'pending':
         return <Clock className="w-4 h-4" />;
       default:
@@ -1341,8 +1362,8 @@ export default function ApplicationDetailPage() {
                 </Card>
               )}
  
-                       {/* Status Update Section */}
-              {(hasPermission('update_application_status') || hasRole('admission_officer')) && (
+               {/* Status Update Section */}
+               {(hasPermission('update_application_status') || hasRole('admission_officer')) && applicationData.status !== 'cancelled' && (
                 <Card data-status-section>
                   <CardHeader>
                     <CardTitle className="text-lg">Status Management</CardTitle>
@@ -1438,6 +1459,20 @@ export default function ApplicationDetailPage() {
                             </div>
                           </div>
                         )}
+
+                        {/* Cancel Application Button - Only for approved applications */}
+                        <div className="pt-3 border-t border-green-200">
+                          <Label className="text-green-900 font-medium text-sm mb-2 block">Application Actions:</Label>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowCancelDialog(true)}
+                            disabled={statusUpdateLoading}
+                            className="border-red-300 text-red-700 hover:bg-red-50"
+                          >
+                            Cancel Application
+                          </Button>
+                        </div>
                       </div>
                     ) : (
                       <>
@@ -1477,14 +1512,14 @@ export default function ApplicationDetailPage() {
                             >
                               Reject
                             </Button>
-                            <Button
-                              size="sm"
-                              variant={applicationData.status === 'waitlisted' ? 'default' : 'outline'}
-                              onClick={() => handleStatusUpdate('waitlisted')}
-                              disabled={statusUpdateLoading}
-                            >
-                              Waitlist
-                            </Button>
+                              <Button
+                                size="sm"
+                                variant={applicationData.status === 'waitlisted' ? 'default' : 'outline'}
+                                onClick={() => handleStatusUpdate('waitlisted')}
+                                disabled={statusUpdateLoading}
+                              >
+                                Waitlist
+                              </Button>
                           </div>
                         </div>
                         <div>
@@ -1561,15 +1596,88 @@ export default function ApplicationDetailPage() {
                               </Button>
                             </div>
                           </div>
-                        </div>
-                      )}
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
+                         </div>
+                       )}
 
-              {/* Fee Structure Assignment - Only visible when application is approved */}
+
+                       </>
+                        )}
+
+                        {showCancelInput && (
+                          <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                            <div className="space-y-3">
+                              <div>
+                                <Label htmlFor="tcNumber" className="text-sm font-medium text-gray-900">
+                                  TC Number <span className="text-gray-500">(Optional)</span>
+                                </Label>
+                                <Input
+                                  id="tcNumber"
+                                  type="text"
+                                  value={tcNumber}
+                                  onChange={(e) => setTcNumber(e.target.value)}
+                                  placeholder="e.g., TC/2025-26/1234"
+                                  className="mt-1"
+                                />
+                              </div>
+
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleStatusUpdate('cancelled')}
+                                  disabled={statusUpdateLoading}
+                                  className="bg-gray-600 hover:bg-gray-700"
+                                >
+                                  {statusUpdateLoading ? 'Cancelling...' : 'Cancel Application'}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setShowCancelInput(false);
+                                    setTcNumber('');
+                                  }}
+                                  disabled={statusUpdateLoading}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                   </CardContent>
+                 </Card>
+                )}
+
+               {/* Cancel Confirmation Dialog */}
+               <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+                 <AlertDialogContent>
+                   <AlertDialogHeader>
+                     <AlertDialogTitle>Cancel Application</AlertDialogTitle>
+                     <AlertDialogDescription>
+                       Are you sure you want to cancel this application? This action cannot be undone.
+                       {applicationData?.admissionNumber && (
+                         <span className="block mt-2 font-medium text-red-600">
+                           Admission Number: {applicationData.admissionNumber}
+                         </span>
+                       )}
+                     </AlertDialogDescription>
+                   </AlertDialogHeader>
+                   <AlertDialogFooter>
+                     <AlertDialogCancel>Cancel</AlertDialogCancel>
+                     <AlertDialogAction
+                       onClick={() => {
+                         setShowCancelInput(true);
+                         setShowCancelDialog(false);
+                       }}
+                       className="bg-red-600 hover:bg-red-700"
+                     >
+                       Proceed to Cancel
+                     </AlertDialogAction>
+                   </AlertDialogFooter>
+                 </AlertDialogContent>
+               </AlertDialog>
+
+               {/* Fee Structure Assignment - Only visible when application is approved */}
               {(hasPermission('update_application_status') || hasRole('admission_officer')) && (
                 <FeeStructureAssignment
                   applicationId={applicationData._id}

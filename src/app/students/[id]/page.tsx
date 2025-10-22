@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { get } from '@/utilities/AxiosInterceptor';
+import { get, put } from '@/utilities/AxiosInterceptor';
 import { format } from 'date-fns';
 import { 
   ArrowLeft, 
@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -261,6 +262,7 @@ export default function StudentDetailPage() {
   
   const [studentData, setStudentData] = useState<StudentDetailsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loginToggleLoading, setLoginToggleLoading] = useState(false);
   const { toast } = useToast();
 
   const handleFeeAssignmentUpdate = (updatedAssignment: FeeAssignment) => {
@@ -268,6 +270,43 @@ export default function StudentDetailPage() {
       ...prev,
       feeAssignment: updatedAssignment
     } : null);
+  };
+
+  const handleLoginToggle = async (isActive: boolean) => {
+    if (!studentData?.studentLogin.id) return;
+
+    setLoginToggleLoading(true);
+    try {
+      const response = await put<any>(`/api/v1/admin/students/${studentData.studentLogin.id}/login-status`, {
+        isActive
+      });
+
+      if (response.success) {
+        setStudentData(prev => prev ? {
+          ...prev,
+          studentLogin: {
+            ...prev.studentLogin,
+            isActive
+          }
+        } : null);
+
+        toast({
+          title: 'Success',
+          description: `Student login ${isActive ? 'activated' : 'deactivated'} successfully`,
+        });
+      } else {
+        throw new Error(response.message || 'Failed to update login status');
+      }
+    } catch (error) {
+      console.error('Error updating login status:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update student login status',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoginToggleLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -614,13 +653,32 @@ export default function StudentDetailPage() {
                         )}
                       </div>
                     </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700">Role</Label>
-                      <Badge variant="secondary" className="text-xs">
-                        {studentLogin.role}
-                      </Badge>
-                    </div>
-                  </div>
+                     <div>
+                       <Label className="text-sm font-medium text-gray-700">Role</Label>
+                       <Badge variant="secondary" className="text-xs">
+                         {studentLogin.role}
+                       </Badge>
+                     </div>
+                     <div className="col-span-full">
+                       <Label className="text-sm font-medium text-gray-700">Login Status</Label>
+                       <div className="flex items-center space-x-3 mt-2">
+                         <Switch
+                           checked={studentLogin.isActive}
+                           onCheckedChange={handleLoginToggle}
+                           disabled={loginToggleLoading}
+                         />
+                         <span className="text-sm text-gray-600">
+                           {studentLogin.isActive ? 'Active' : 'Inactive'}
+                         </span>
+                         {loginToggleLoading && (
+                           <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                         )}
+                       </div>
+                       <p className="text-xs text-gray-500 mt-1">
+                         Toggle to {studentLogin.isActive ? 'deactivate' : 'activate'} student login access
+                       </p>
+                     </div>
+                   </div>
                 </CardContent>
               </Card>
 

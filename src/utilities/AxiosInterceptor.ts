@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 
 // || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; || "https://server.mcem.site"
 
-const API_URL = "https://api.mcem.info"
+const API_URL = "http://localhost:8000"
 
 const axiosApi = axios.create({
   baseURL: API_URL,
