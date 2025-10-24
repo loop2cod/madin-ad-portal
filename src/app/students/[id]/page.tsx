@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { get, put } from '@/utilities/AxiosInterceptor';
+import { get, put, post } from '@/utilities/AxiosInterceptor';
 import { format } from 'date-fns';
 import { 
   ArrowLeft, 
@@ -27,7 +27,9 @@ import {
   Phone,
   Shield,
   UserCheck,
-  UserX
+  UserX,
+  Unlock,
+  Lock
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -248,6 +250,13 @@ interface FeeAssignment {
   isActive: boolean;
 }
 
+interface ProfileSectionStatus {
+  personalDetails: { isCompleted: boolean; isLocked: boolean; lockedAt?: string; lockedBy?: any; completedAt?: string; };
+  addressFamilyDetails: { isCompleted: boolean; isLocked: boolean; lockedAt?: string; lockedBy?: any; completedAt?: string; };
+  educationDetails: { isCompleted: boolean; isLocked: boolean; lockedAt?: string; lockedBy?: any; completedAt?: string; };
+  programSelection: { isCompleted: boolean; isLocked: boolean; lockedAt?: string; lockedBy?: any; completedAt?: string; };
+}
+
 interface StudentDetailsData {
   studentLogin: StudentLoginData;
   applicationData: ApplicationData;
@@ -261,8 +270,10 @@ export default function StudentDetailPage() {
   const { hasPermission } = useAuth();
   
   const [studentData, setStudentData] = useState<StudentDetailsData | null>(null);
+  const [profileSectionStatus, setProfileSectionStatus] = useState<ProfileSectionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loginToggleLoading, setLoginToggleLoading] = useState(false);
+  const [unlockingSection, setUnlockingSection] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleFeeAssignmentUpdate = (updatedAssignment: FeeAssignment) => {
@@ -309,6 +320,50 @@ export default function StudentDetailPage() {
     }
   };
 
+  const fetchProfileSectionStatus = async (admissionNumber: string) => {
+    try {
+      const response = await get<any>(`/api/v1/auth/admin/profile-section/status/${admissionNumber}`);
+      if (response.success) {
+        setProfileSectionStatus(response.data.sectionStatus);
+      }
+    } catch (error) {
+      console.error('Error fetching profile section status:', error);
+    }
+  };
+
+  const handleUnlockSection = async (section: string) => {
+    if (!studentData?.studentLogin.admissionNumber) return;
+
+    setUnlockingSection(section);
+    try {
+      const response = await post<any>('/api/v1/auth/admin/profile-section/unlock', {
+        admissionNumber: studentData.studentLogin.admissionNumber,
+        section
+      });
+
+      if (response.success) {
+        toast({
+          title: 'Success',
+          description: `${section} section unlocked successfully`,
+        });
+        
+        // Refresh profile section status
+        await fetchProfileSectionStatus(studentData.studentLogin.admissionNumber);
+      } else {
+        throw new Error(response.message || 'Failed to unlock section');
+      }
+    } catch (error: any) {
+      console.error('Error unlocking section:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to unlock section',
+        variant: 'destructive',
+      });
+    } finally {
+      setUnlockingSection(null);
+    }
+  };
+
   useEffect(() => {
     const fetchStudentData = async () => {
       if (!studentId) return;
@@ -320,6 +375,11 @@ export default function StudentDetailPage() {
         if (response.success) {
           console.log('Student data received:', response.data); // Debug log
           setStudentData(response.data);
+          
+          // Fetch profile section status if admission number is available
+          if (response.data.studentLogin?.admissionNumber) {
+            await fetchProfileSectionStatus(response.data.studentLogin.admissionNumber);
+          }
         } else {
           throw new Error(response.message || 'Failed to fetch student data');
         }
@@ -750,6 +810,99 @@ export default function StudentDetailPage() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Profile Section Management */}
+              {profileSectionStatus && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-lg">
+                      <Shield className="w-5 h-5 mr-2" />
+                      Profile Section Management
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {Object.entries(profileSectionStatus).map(([sectionKey, status]) => {
+                      const sectionNames: { [key: string]: string } = {
+                        personalDetails: 'Personal Details',
+                        addressFamilyDetails: 'Address & Family Details',
+                        educationDetails: 'Education Details'
+                      };
+
+                      return (
+                        <div key={sectionKey} className="p-4 border rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-medium text-gray-900">
+                              {sectionNames[sectionKey]}
+                            </h4>
+                            <div className="flex items-center space-x-2">
+                              {status.isCompleted ? (
+                                <Badge variant="default" className="bg-green-100 text-green-800">
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Completed
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+                                  <Clock className="w-3 h-3 mr-1" />
+                                  Pending
+                                </Badge>
+                              )}
+                              {status.isLocked ? (
+                                <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">
+                                  <Lock className="w-3 h-3 mr-1" />
+                                  Locked
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
+                                  <Unlock className="w-3 h-3 mr-1" />
+                                  Unlocked
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {status.isCompleted && status.completedAt && (
+                            <p className="text-xs text-gray-600 mb-2">
+                              Completed: {format(new Date(status.completedAt), 'dd/MM/yyyy hh:mm a')}
+                            </p>
+                          )}
+                          
+                          {status.isLocked && status.lockedAt && (
+                            <p className="text-xs text-gray-600 mb-2">
+                              Locked: {format(new Date(status.lockedAt), 'dd/MM/yyyy hh:mm a')}
+                            </p>
+                          )}
+
+                          {status.isLocked && (
+                            <div className="flex justify-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUnlockSection(sectionKey)}
+                                disabled={unlockingSection === sectionKey}
+                                className="text-amber-700 border-amber-300 hover:bg-amber-50"
+                              >
+                                {unlockingSection === sectionKey ? (
+                                  <div className="animate-spin w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full mr-2" />
+                                ) : (
+                                  <Unlock className="w-3 h-3 mr-2" />
+                                )}
+                                {unlockingSection === sectionKey ? 'Unlocking...' : 'Unlock Section'}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-xs text-blue-700">
+                        <strong>Note:</strong> Unlocking a section will allow the student to edit and re-submit that part of their profile. 
+                        The section will automatically lock again once the student saves their changes.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Personal Details */}
               <Card>
