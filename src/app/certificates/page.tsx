@@ -106,6 +106,12 @@ export default function AdminCertificatesPage() {
     remarks: ''
   });
   
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
+  const [generateForm, setGenerateForm] = useState({
+    collegeHeader: '',
+    studentStatus: ''
+  });
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
@@ -197,14 +203,26 @@ export default function AdminCertificatesPage() {
     }
   };
 
-  const handleGenerateCertificate = async (request: CertificateRequest) => {
+  const openGenerateDialog = (request: CertificateRequest) => {
+    setSelectedRequest(request);
+    setGenerateForm({
+      collegeHeader: '',
+      studentStatus: ''
+    });
+    setShowGenerateDialog(true);
+  };
+
+  const handleGenerateCertificate = async () => {
+    if (!selectedRequest) return;
+
     try {
-      const response = await post(`/api/v1/certificates/${request.id}/generate`) as any;
+      const response = await post(`/api/v1/certificates/${selectedRequest.id}/generate`, generateForm) as any;
       if (response.success) {
         toast({
           title: "Success",
           description: "Certificate marked as ready for download",
         });
+        setShowGenerateDialog(false);
         fetchCertificateRequests();
       }
     } catch (error: any) {
@@ -481,7 +499,7 @@ export default function AdminCertificatesPage() {
                           {request.status === 'approved' && (
                             <Button
                               size="sm"
-                              onClick={() => handleGenerateCertificate(request)}
+                              onClick={() => openGenerateDialog(request)}
                               className="bg-blue-600 hover:bg-blue-700"
                             >
                              Issue Certificate
@@ -617,6 +635,76 @@ export default function AdminCertificatesPage() {
                 </Button>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Certificate Generation Dialog */}
+        <Dialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Issue Certificate</DialogTitle>
+            </DialogHeader>
+            {selectedRequest && (
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-500">Student: {selectedRequest.studentId.name}</Label>
+                  <p className="text-sm text-gray-600">
+                    {certificateTypeLabels[selectedRequest.certificateType as keyof typeof certificateTypeLabels]}
+                  </p>
+                </div>
+                
+                <div>
+                  <Label htmlFor="collegeHeader">College Header</Label>
+                  <Select 
+                    value={generateForm.collegeHeader} 
+                    onValueChange={(value) => setGenerateForm(prev => ({ ...prev, collegeHeader: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select college header" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MADIN COLLEGE OF ENGINEERING & MANAGEMENT">
+                        MADIN COLLEGE OF ENGINEERING & MANAGEMENT
+                      </SelectItem>
+                      <SelectItem value="MADIN POLYTECHNIC COLLEGE">
+                        MADIN POLYTECHNIC COLLEGE
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {['bonafide', 'letter_of_recommendation', 'medium_of_instruction', 'course_conduct_certificate'].includes(selectedRequest.certificateType) && (
+                  <div>
+                    <Label htmlFor="studentStatus">Student Status</Label>
+                    <Select 
+                      value={generateForm.studentStatus} 
+                      onValueChange={(value) => setGenerateForm(prev => ({ ...prev, studentStatus: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select student status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="is">is</SelectItem>
+                        <SelectItem value="was">was</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                
+                <div className="flex justify-end gap-4">
+                  <Button variant="outline" onClick={() => setShowGenerateDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleGenerateCertificate}
+                    className="bg-blue-600 hover:bg-blue-700"
+                    disabled={!generateForm.collegeHeader || (!generateForm.studentStatus && ['bonafide', 'letter_of_recommendation', 'medium_of_instruction', 'course_conduct_certificate'].includes(selectedRequest.certificateType))}
+                  >
+                    Issue Certificate
+                  </Button>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
 
