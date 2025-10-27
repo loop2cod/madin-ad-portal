@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { 
   FileText, 
   Clock, 
@@ -235,7 +236,7 @@ export default function AdminCertificatesPage() {
     }
   };
 
-  const handleDownload = async (request: CertificateRequest) => {
+  const handleDownload = async (request: CertificateRequest, withSeal: boolean = true) => {
     try {
       const certificateTypes = {
         bonafide: 'Bonafide_Certificate',
@@ -246,14 +247,17 @@ export default function AdminCertificatesPage() {
         conduct_certificate: 'Conduct_Certificate',
         transfer_certificate: 'Transfer_Certificate'
       };
-      
-      const filename = `${certificateTypes[request.certificateType as keyof typeof certificateTypes] || request.certificateType}_${request.studentId.admissionNumber}.pdf`;
-      
-      await downloadFile(`/api/v1/certificates/download/${request.id}`, filename);
-      
+
+      const sealSuffix = withSeal ? '_with_seal' : '_without_seal';
+      const filename = `${certificateTypes[request.certificateType as keyof typeof certificateTypes] || request.certificateType}_${request.studentId.admissionNumber}${sealSuffix}.pdf`;
+
+      const downloadUrl = `/api/v1/certificates/download/${request.id}?withSeal=${withSeal}`;
+
+      await downloadFile(downloadUrl, filename);
+
       toast({
         title: "Success",
-        description: "Certificate downloaded successfully",
+        description: `Certificate ${withSeal ? 'with seal' : 'without seal'} downloaded successfully`,
       });
     } catch (error) {
       console.error('Download failed:', error);
@@ -506,15 +510,29 @@ export default function AdminCertificatesPage() {
                             </Button>
                           )}
                           
-                          {request.status === 'generated' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDownload(request)}
-                            >
-                              <Download className="w-4 h-4" />
-                            </Button>
-                          )}
+                           {request.status === 'generated' && (
+                             <DropdownMenu>
+                               <DropdownMenuTrigger asChild>
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                 >
+                                   <Download className="w-4 h-4 mr-1" />
+                                   Download
+                                 </Button>
+                               </DropdownMenuTrigger>
+                               <DropdownMenuContent align="end">
+                                 <DropdownMenuItem onClick={() => handleDownload(request, true)}>
+                                   <Download className="w-4 h-4 mr-2" />
+                                   With Seal
+                                 </DropdownMenuItem>
+                                 <DropdownMenuItem onClick={() => handleDownload(request, false)}>
+                                   <Download className="w-4 h-4 mr-2" />
+                                   Without Seal
+                                 </DropdownMenuItem>
+                               </DropdownMenuContent>
+                             </DropdownMenu>
+                           )}
                         </div>
                       </TableCell>
                     </TableRow>
